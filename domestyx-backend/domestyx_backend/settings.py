@@ -30,13 +30,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Keep this for static files
-    'django.contrib.sessions.middleware.SessionMiddleware', # Add this
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',  # This MUST come before Auth
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware', # Add this
-    'django.contrib.messages.middleware.MessageMiddleware', # Add this
+    'django.contrib.auth.middleware.AuthenticationMiddleware', # Required for Admin
+    'django.contrib.messages.middleware.MessageMiddleware',      # Required for Admin
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
