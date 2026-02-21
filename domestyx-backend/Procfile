@@ -1,0 +1,1 @@
+web: gunicorn domestyx_backend.wsgi

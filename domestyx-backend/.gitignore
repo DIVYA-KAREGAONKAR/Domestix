@@ -1,0 +1,15 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Django-specific
+*.sqlite3
+/media/
+*.log
+.env
+
+# VSCode
+.vscode/
