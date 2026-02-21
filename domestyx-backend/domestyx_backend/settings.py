@@ -143,18 +143,3 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 
 
-ALLOWED_HOSTS = ['*'] # Or your specific render URL
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Add this right here
-    # ... rest of middleware
-]
-
-# Database - Link this to the Environment Variable
-DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-}
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
