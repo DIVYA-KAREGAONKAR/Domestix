@@ -63,11 +63,21 @@ WSGI_APPLICATION = 'domestyx_backend.wsgi.application'
 
 # --- Database Logic ---
 # If DATABASE_URL is found (Render), use it. Otherwise, use local MySQL.
+# Replace your current DATABASES logic with this:
 if os.environ.get('DATABASE_URL'):
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            # This replaces the need for ssl-mode in the URL
+            ssl_require=True 
+        )
+    }
+    # Force pymysql to be happy with the options
+    DATABASES['default']['OPTIONS'] = {
+        'ssl': {'ca': '/etc/ssl/certs/ca-certificates.crt'} # Standard Linux path
     }
 else:
+    # Your local ThinkPad MySQL settings
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -78,7 +88,6 @@ else:
             'PORT': '3306',
         }
     }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
