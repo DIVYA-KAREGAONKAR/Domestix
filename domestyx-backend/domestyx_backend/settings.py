@@ -31,12 +31,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',  # Must be before Auth
+    'django.contrib.sessions.middleware.SessionMiddleware', # MUST be here
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware', # Required for Admin
-    'django.contrib.messages.middleware.MessageMiddleware',      # Required for Admin
+    'django.contrib.auth.middleware.AuthenticationMiddleware', # MUST be after sessions
+    'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 ROOT_URLCONF = 'domestyx_backend.urls'
