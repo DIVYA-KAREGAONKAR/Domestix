@@ -3,6 +3,8 @@ dj-database-url
 whitenoise
 gunicorn
 mysqlclient
+pymysql
+cryptography
 djangorestframework
 djangorestframework-simplejwt
 django-cors-headers
