@@ -5,6 +5,7 @@ gunicorn
 mysqlclient
 pymysql
 cryptography
+Pillow
 djangorestframework
 djangorestframework-simplejwt
 django-cors-headers
