@@ -66,13 +66,15 @@ if os.environ.get('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
-            # This replaces the need for ssl-mode in the URL
             ssl_require=True 
         )
     }
-    # Force pymysql to be happy with the options
+    # Simplified SSL options for Aiven
     DATABASES['default']['OPTIONS'] = {
-        'ssl': {'ca': '/etc/ssl/certs/ca-certificates.crt'} # Standard Linux path
+        'ssl': {
+           'check_hostname': False,
+            'verify_identity': False,  # This bypasses the verify failed error
+        }
     }
 else:
     # Your local ThinkPad MySQL settings
