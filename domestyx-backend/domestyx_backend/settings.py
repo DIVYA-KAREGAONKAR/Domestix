@@ -13,7 +13,6 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # ALLOWED_HOSTS needs to include Render URL and localhost
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
 
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -22,22 +21,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
+    'corsheaders',  # Required for React-Django communication
     'rest_framework',
     'rest_framework_simplejwt',
     'users',
 ]
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',      # MUST be at the top
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Handles your CSS/JS on Render
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 ROOT_URLCONF = 'domestyx_backend.urls'
 
 TEMPLATES = [
@@ -58,10 +59,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'domestyx_backend.wsgi.application'
 
-
 # --- Database Logic ---
-# If DATABASE_URL is found (Render), use it. Otherwise, use local MySQL.
-# Replace your current DATABASES logic with this:
 if os.environ.get('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
@@ -69,15 +67,14 @@ if os.environ.get('DATABASE_URL'):
             ssl_require=True 
         )
     }
-    # Simplified SSL options for Aiven
+    # Fix for Aiven SSL certificate verification
     DATABASES['default']['OPTIONS'] = {
         'ssl': {
-           'check_hostname': False,
-            'verify_identity': False,  # This bypasses the verify failed error
+            'check_hostname': False,
+            'verify_identity': False,
         }
     }
 else:
-    # Your local ThinkPad MySQL settings
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -104,10 +101,8 @@ USE_TZ = True
 # --- Static & Media Files ---
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# This handles CSS/JS compression for faster loading
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files (for profile images)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -122,20 +117,18 @@ REST_FRAMEWORK = {
     ),
 }
 
-# CORS settings
+# --- CORS settings ---
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",          # Vite local dev
     "http://localhost:8080",
-    "http://127.0.0.1:8080",
+    "https://domestyx-frontend.onrender.com", # Your frontend Render URL
 ]
 
-# Add your Render Frontend URL here once you have it
+# Add Render hostname to ALLOWED_HOSTS automatically
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-
-
-
 
 
 
