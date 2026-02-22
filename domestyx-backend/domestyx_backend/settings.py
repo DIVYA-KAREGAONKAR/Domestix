@@ -122,7 +122,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",          # Vite local dev
     "http://localhost:8080",
-    "https://domestyx-frontend.onrender.com", # Your frontend Render URL
+   "https://domestix-1.onrender.com",  # <--- Add this exactly as seen in your logs
+    "https://domestix.onrender.com", # Your frontend Render URL
 ]
 
 # Add Render hostname to ALLOWED_HOSTS automatically
