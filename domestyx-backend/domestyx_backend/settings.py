@@ -11,8 +11,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@#=&l_al3$+^t5^5p0=t*
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # ALLOWED_HOSTS needs to include Render URL and localhost
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
-
+# Add your Render URL here
+ALLOWED_HOSTS = [
+    'domestix.onrender.com', 
+    '127.0.0.1', 
+    'localhost'
+]
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
