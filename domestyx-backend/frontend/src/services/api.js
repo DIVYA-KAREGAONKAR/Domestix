@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-// ✅ Base URL — change this if your backend is on another host
+// ✅ Base URL from your .env (points to port 8002)
 const API_URL = import.meta.env.VITE_API_URL;
 
-// ✅ Create Axios instance
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -11,10 +10,10 @@ const api = axios.create({
   },
 });
 
-// ✅ Intercept request to add JWT token if present
+// ✅ Add JWT token to every request automatically
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token'); // your JWT token
+    const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,15 +22,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Intercept response errors if you want (optional)
+// ✅ Handle 401 errors (expired tokens)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid — optional: auto-logout or refresh logic
       localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      window.location.href = '/login'; // redirect to login page
+      localStorage.removeItem('user');
+      window.location.href = '/worker/login'; 
     }
     return Promise.reject(error);
   }

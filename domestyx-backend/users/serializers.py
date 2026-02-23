@@ -6,34 +6,34 @@ from .models import WorkerProfile
 # users/serializers.py
 from rest_framework import serializers
 from .models import WorkerProfile
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
-class WorkerProfileSerializer(serializers.ModelSerializer):
-    # We define these explicitly as ReadOnly so Django doesn't 
-    # try to save them into the WorkerProfile MySQL table.
-    first_name = serializers.ReadOnlyField(source='user.first_name')
-    last_name = serializers.ReadOnlyField(source='user.last_name')
-    email = serializers.ReadOnlyField(source='user.email')
 
+
+class WorkerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkerProfile
-        # List ONLY the fields that exist in your WorkerProfile model
-        # plus the three ReadOnly fields we defined above.
         fields = [
-            'id', 'first_name', 'last_name', 'email', 'phone', 'address', 
-            'city', 'state', 'zip_code', 'country', 'bio', 'hourly_rate', 
-            'experience', 'services', 'availability', 'languages', 
-            'has_transportation', 'has_references', 'is_background_checked', 
-            'profile_image'
+            "phone", "address", "city", "state", "zip_code", "country",
+            "bio", "hourly_rate", "years_of_experience", "services", 
+            "availability", "languages", "has_transportation", 
+            "has_references", "is_background_checked", "profile_image"
         ]
+        read_only_fields = ["user"]
 # -----------------------------
 # Register Serializer
 # -----------------------------
+# users/serializers.py
+
+# users/serializers.py
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
+    # ✅ This Meta class MUST be inside RegisterSerializer
     class Meta:
         model = User
         fields = ('email', 'password', 'password2', 'first_name', 'last_name', 'role')
@@ -45,14 +45,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password2')
+        # ✅ Ensure 'role' is passed here to fix the redirect issue we discussed
         user = User.objects.create_user(
             email=validated_data['email'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            role=validated_data.get('role', 'worker') 
         )
         return user
-
 # -----------------------------
 # Profile Serializer
 # -----------------------------

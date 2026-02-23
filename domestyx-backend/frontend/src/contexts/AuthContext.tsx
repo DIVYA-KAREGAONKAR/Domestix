@@ -1,4 +1,3 @@
-// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/services/api';
 
@@ -13,6 +12,7 @@ interface User {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
+  isLoading: boolean; 
   isWorker: boolean;
   isEmployer: boolean;
   getAccessToken: () => string | null;
@@ -24,21 +24,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); 
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    const storedUser = localStorage.getItem('user');
-    if (token && storedUser) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(JSON.parse(storedUser));
-    }
+    const initAuth = () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        const storedUser = localStorage.getItem('user');
+        
+        if (token && storedUser) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error("Failed to parse stored user:", error);
+        localStorage.clear(); // Clear potentially corrupted data
+      } finally {
+        setIsLoading(false); 
+      }
+    };
+    initAuth();
   }, []);
 
   const login = (accessToken: string, userObject: User) => {
+    // ✅ Normalization: Force role to lowercase to match Route requirements
+    const normalizedUser = {
+      ...userObject,
+      role: userObject.role.toLowerCase() as 'worker' | 'employer'
+    };
+
     localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('user', JSON.stringify(userObject));
+    localStorage.setItem('user', JSON.stringify(normalizedUser));
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-    setUser(userObject);
+    
+    setUser(normalizedUser);
+    setIsLoading(false); 
   };
 
   const logout = () => {
@@ -46,15 +66,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
+    setIsLoading(false); 
   };
 
-  const getAccessToken = () => localStorage.getItem('access_token') || "";
+  const getAccessToken = () => localStorage.getItem('access_token');
 
   const isWorker = user?.role === 'worker';
   const isEmployer = user?.role === 'employer';
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated: !!user, user, isWorker, isEmployer, login, logout, getAccessToken }}>
+    <AuthContext.Provider 
+      value={{ 
+        isAuthenticated: !!user, 
+        user, 
+        isLoading, 
+        isWorker, 
+        isEmployer, 
+        login, 
+        logout, 
+        getAccessToken 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
