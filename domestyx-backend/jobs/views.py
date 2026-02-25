@@ -32,21 +32,35 @@ def my_applications(request):
     serializer = ApplicationSerializer(applications, many=True)
     return Response(serializer.data)
 
+# jobs/views.py
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def apply_to_job(request, job_id):
     try:
+        # 1. Look up the job
         job = Job.objects.get(id=job_id)
     except Job.DoesNotExist:
         return Response({'message': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
     
+    # 2. ✅ CRITICAL ROLE CHECK: Must match your CustomUser choice 'worker'
     if request.user.role != 'worker':
-        return Response({'message': 'Only workers can apply.'}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {'message': 'Only workers can apply to jobs.'}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
         
+    # 3. Check for existing application
     if Application.objects.filter(worker=request.user, job=job).exists():
-        return Response({'message': 'Already applied.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Already applied for this job.'}, status=status.HTTP_400_BAD_REQUEST)
         
-    application = Application.objects.create(job=job, worker=request.user, status='applied')
+    # 4. Create the application
+    application = Application.objects.create(
+        job=job, 
+        worker=request.user, 
+        status='applied' # Matches your APPLICATION_STATUS choices
+    )
+    
     return Response(ApplicationSerializer(application).data, status=status.HTTP_201_CREATED)
 
 @api_view(['PATCH'])

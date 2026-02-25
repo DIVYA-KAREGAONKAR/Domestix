@@ -26,10 +26,7 @@ const WorkerDashboard = () => {
     setLoading(true);
     try {
       const response = await api.get("/worker/available-jobs/", {
-        params: {
-          search: searchQuery,
-          category: category !== "all" ? category : ""
-        }
+        params: { search: searchQuery, category: category !== "all" ? category : "" }
       }); 
       setJobs(response.data);
     } catch (err) {
@@ -56,46 +53,27 @@ const WorkerDashboard = () => {
       navigate('/worker/login');
       return;
     }
-
-    if (activeTab === 'browse') {
-      fetchJobs();
-    } else {
-      fetchAppliedJobs();
-    }
+    activeTab === 'browse' ? fetchJobs() : fetchAppliedJobs();
   }, [isAuthenticated, activeTab, category]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchJobs();
-  };
 
   const handleApply = async (jobId: number) => {
     try {
       await api.post(`/jobs/${jobId}/apply/`); 
-      toast({ title: "Success", description: "Application sent!" });
+      toast({ title: "Success", description: "Application sent successfully!" });
       fetchJobs(); 
-    } catch (err) {
-      toast({ title: "Error", description: "Application failed.", variant: "destructive" });
+    } catch (err: any) {
+      const message = err.response?.data?.message || "Application failed.";
+      toast({ title: "Error", description: message, variant: "destructive" });
     }
   };
 
-  // ✅ Updated to match Backend status choices
   const getStatusStyles = (status: string) => {
     switch (status) {
-      case 'hired': 
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'rejected': 
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'applied': 
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      default: 
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'hired': return 'bg-green-100 text-green-700 border-green-200';
+      case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
+      case 'applied': return 'bg-blue-100 text-blue-700 border-blue-200';
+      default: return 'bg-yellow-100 text-yellow-700 border-yellow-200';
     }
-  };
-
-  const getStatusLabel = (status: string) => {
-    if (status === 'hired') return 'ACCEPTED';
-    return status.toUpperCase();
   };
 
   if (!user) return null;
@@ -138,7 +116,7 @@ const WorkerDashboard = () => {
         {activeTab === 'browse' ? (
           <>
             <div className="mb-8 flex flex-col md:flex-row gap-4">
-              <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+              <form onSubmit={(e) => { e.preventDefault(); fetchJobs(); }} className="flex-1 flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input 
@@ -159,7 +137,6 @@ const WorkerDashboard = () => {
                   <SelectItem value="all">All Categories</SelectItem>
                   <SelectItem value="cleaning">Cleaning</SelectItem>
                   <SelectItem value="babysitting">Babysitting</SelectItem>
-                  <SelectItem value="cooking">Cooking</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -167,8 +144,6 @@ const WorkerDashboard = () => {
             <div className="grid grid-cols-1 gap-4">
               {loading ? (
                 <p className="text-center py-10 text-gray-500">Loading jobs...</p>
-              ) : jobs.length === 0 ? (
-                <Card className="p-10 text-center text-gray-400">No jobs available right now.</Card>
               ) : jobs.map((job: any) => (
                 <Card key={job.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -182,12 +157,19 @@ const WorkerDashboard = () => {
                         <span className="flex items-center"><MapPin className="h-4 w-4 mr-1 text-red-400" />{job.location}</span>
                       </div>
                     </div>
+                    {/* ✅ ROLE-BASED PROTECTION ON THE BUTTON */}
                     <Button 
                       onClick={() => handleApply(job.id)} 
-                      disabled={job.has_applied}
-                      className={job.has_applied ? "bg-slate-100 text-slate-400 border" : ""}
+                      disabled={job.has_applied || user?.role !== 'worker'}
+                      className={job.has_applied || user?.role !== 'worker' ? "bg-slate-100 text-slate-400 border" : ""}
                     >
-                      {job.has_applied ? <><CheckCircle className="h-4 w-4 mr-2"/> Applied</> : "Apply Now"}
+                      {job.has_applied ? (
+                        <><CheckCircle className="h-4 w-4 mr-2"/> Applied</>
+                      ) : user?.role !== 'worker' ? (
+                        "Worker Only"
+                      ) : (
+                        "Apply Now"
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
@@ -196,11 +178,7 @@ const WorkerDashboard = () => {
           </>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {loading ? (
-              <p className="text-center py-10 text-gray-500">Loading your applications...</p>
-            ) : appliedJobs.length === 0 ? (
-              <Card className="p-12 text-center text-gray-400">You haven't applied to any jobs yet.</Card>
-            ) : appliedJobs.map((app: any) => (
+            {appliedJobs.map((app: any) => (
               <Card key={app.id} className="border-l-4 border-l-primary">
                 <CardContent className="p-6 flex justify-between items-center">
                   <div className="space-y-1">
@@ -210,9 +188,8 @@ const WorkerDashboard = () => {
                       Applied on {app.applied_at ? new Date(app.applied_at).toLocaleDateString() : 'Recent'}
                     </div>
                   </div>
-                  {/* ✅ Dynamic Badge Labels and Colors */}
                   <Badge className={`px-4 py-1 border shadow-sm ${getStatusStyles(app.status)}`}>
-                    {getStatusLabel(app.status)}
+                    {app.status === 'hired' ? 'ACCEPTED' : app.status.toUpperCase()}
                   </Badge>
                 </CardContent>
               </Card>
