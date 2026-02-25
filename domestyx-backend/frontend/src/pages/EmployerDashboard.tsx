@@ -1,296 +1,226 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import api from "@/services/api"; 
 import { 
-  User, 
-  Briefcase, 
-  Users, 
-  Calendar, 
-  MapPin, 
-  LogOut,
-  Settings,
-  Star,
-  Clock,
-  Plus,
-  Eye,
-  Edit,
-  IndianRupee
+  Briefcase, Users, LogOut, Plus, MapPin, Trash2, History 
 } from "lucide-react";
 
 const EmployerDashboard = () => {
-  const { user, logout, isAuthenticated} = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState([
-    {
-      id: 1,
-      title: "House Cleaning",
-      salary: "₹400/hour",
-      location: "Bandra, Mumbai",
-      type: "Part-time",
-      status: "active",
-      applications: 8,
-      description: "Weekly house cleaning for a 3-bedroom apartment",
-      posted: "2 days ago"
-    },
-    {
-      id: 2,
-      title: "Babysitting",
-      salary: "₹350/hour",
-      location: "Koramangala, Bangalore",
-      type: "Weekends",
-      status: "active",
-      applications: 12,
-      description: "Weekend babysitting for 2 children (ages 5 and 8)",
-      posted: "1 week ago"
-    },
-    {
-      id: 3,
-      title: "Elder Care",
-      salary: "₹500/hour",
-      location: "Connaught Place, Delhi",
-      type: "Full-time",
-      status: "filled",
-      applications: 5,
-      description: "Companion care for elderly gentleman",
-      posted: "3 days ago"
+  
+  const [jobs, setJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'active' | 'history'>('active');
+  const [history, setHistory] = useState([]);
+
+  const fetchMyJobs = async () => {
+    try {
+      const response = await api.get("/employer/jobs/"); 
+      const jobsData = response.data;
+      setJobs(jobsData);
+      
+      // ✅ Auto-select the first job so applicants are visible immediately
+      if (jobsData.length > 0 && !selectedJob) {
+        setSelectedJob(jobsData[0]);
+      } else if (selectedJob) {
+        const updated = jobsData.find((j: any) => j.id === selectedJob.id);
+        if (updated) setSelectedJob(updated);
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to fetch jobs", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
+
+  const fetchHistory = async () => {
+    try {
+      const response = await api.get("/employer/application-history/");
+      setHistory(response.data);
+    } catch (err) {
+      console.error("History fetch failed");
+    }
+  };
 
   useEffect(() => {
-    if (!isAuthenticated ) {
+    if (!isAuthenticated) {
       navigate('/employer/login');
+      return;
     }
-  }, [isAuthenticated,  navigate]);
+    viewMode === 'active' ? fetchMyJobs() : fetchHistory();
+  }, [isAuthenticated, viewMode]);
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-    navigate('/');
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="outline" className="text-success border-success">Active</Badge>;
-      case 'filled':
-        return <Badge variant="outline" className="text-primary border-primary">Filled</Badge>;
-      case 'paused':
-        return <Badge variant="outline" className="text-accent border-accent">Paused</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
+  const handleStatusUpdate = async (applicationId: number, status: 'accepted' | 'rejected') => {
+    try {
+      await api.patch(`/applications/${applicationId}/status/`, { status });
+      toast({ title: "Success", description: `Applicant ${status} successfully.` });
+      fetchMyJobs(); 
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
     }
   };
 
-  if (!user) return null;
+  const handleDeleteJob = async (jobId: number) => {
+    if (!window.confirm("Delete this job and all its applications?")) return;
+    try {
+      await api.delete(`/employer/jobs/${jobId}/delete/`);
+      toast({ title: "Deleted", description: "Job removed." });
+      if (selectedJob?.id === jobId) setSelectedJob(null);
+      fetchMyJobs();
+    } catch (error) {
+      toast({ title: "Error", description: "Delete failed.", variant: "destructive" });
+    }
+  };
+
+  if (!user || isLoading) return <div className="p-10 text-center font-medium">Loading Dashboard...</div>;
 
   return (
-    <div className="min-h-screen bg-app-bg">
-      {/* Header */}
-      <header className="bg-app-bg shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-2xl font-bold text-primary">
-                DomestyX
-              </Link>
-              <span className="text-gray-300">|</span>
-              <span className="text-gray-600">Employer Dashboard</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link to="/employer/post-job">
-                <Button className="btn-primary">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Post Job
-                </Button>
-              </Link>
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-white border-b sticky top-0 z-20 px-4 h-16 flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <Link to="/" className="text-2xl font-bold text-primary">DomestyX</Link>
+          <Badge variant="outline" className="text-[10px] uppercase tracking-wider">Employer Portal</Badge>
+        </div>
+        <div className="flex space-x-3">
+          <Button onClick={() => navigate('/employer/post-job')} size="sm">
+            <Plus className="w-4 h-4 mr-1" /> Post Job
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => { logout(); navigate('/'); }}>
+            <LogOut className="w-4 h-4" />
+          </Button>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src="/placeholder-avatar.jpg" />
-              <AvatarFallback className="bg-primary text-white text-lg">
-                {user.first_name.charAt(0)}{user.last_name.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-3xl font-bold text-app-text">
-                Welcome back, {user.first_name}!
-              </h1>
-              <p className="text-gray-600">Manage your job postings and find the perfect workers</p>
-            </div>
+      <main className="max-w-7xl mx-auto p-6">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">Welcome, {user.first_name}!</h1>
+          <div className="bg-gray-200 p-1 rounded-lg flex space-x-1">
+            <Button 
+              variant={viewMode === 'active' ? 'secondary' : 'ghost'} 
+              size="sm" 
+              onClick={() => setViewMode('active')}
+              className={viewMode === 'active' ? "bg-white shadow-sm" : ""}
+            >
+              <Briefcase className="w-4 h-4 mr-2" /> Active
+            </Button>
+            <Button 
+              variant={viewMode === 'history' ? 'secondary' : 'ghost'} 
+              size="sm" 
+              onClick={() => setViewMode('history')}
+              className={viewMode === 'history' ? "bg-white shadow-sm" : ""}
+            >
+              <History className="w-4 h-4 mr-2" /> History
+            </Button>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
-              <Briefcase className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground">2 receiving applications</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
-              <Users className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">25</div>
-              <p className="text-xs text-muted-foreground">+8 this week</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Interviews Scheduled</CardTitle>
-              <Calendar className="h-4 w-4 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">5</div>
-              <p className="text-xs text-muted-foreground">This week</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Hires Made</CardTitle>
-              <Star className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground">This month</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Manage your job postings and applications</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/employer/post-job">
-                <Button className="btn-primary">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Post New Job
-                </Button>
-              </Link>
-              <Button variant="outline">
-                <Users className="h-4 w-4 mr-2" />
-                View Applications
-              </Button>
-              <Button variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Interviews
-              </Button>
-              <Button variant="outline">
-                <Star className="h-4 w-4 mr-2" />
-                Manage Reviews
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Job Listings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Job Postings</CardTitle>
-            <CardDescription>Manage and track your posted jobs</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {jobs.map((job) => (
-                <div key={job.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Briefcase className="h-4 w-4" />
-                        <h3 className="text-lg font-semibold text-app-text">{job.title}</h3>
-                        {getStatusBadge(job.status)}
-                      </div>
-                      <p className="text-gray-600 mb-2">{job.description}</p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <IndianRupee className="h-4 w-4 mr-1" />
-                          {job.salary}
-                        </span>
-                        <span className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {job.location}
-                        </span>
-                        <span className="flex items-center">
-                          <Users className="h-4 w-4 mr-1" />
-                          {job.applications} applications
-                        </span>
-                        <span className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {job.posted}
-                        </span>
+        {viewMode === 'active' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              <h2 className="font-semibold text-lg text-slate-700">Your Job Postings</h2>
+              {jobs.length === 0 ? (
+                <div className="p-12 border-2 border-dashed rounded-xl text-center text-slate-400">No jobs posted yet.</div>
+              ) : jobs.map((job: any) => (
+                <Card 
+                  key={job.id} 
+                  onClick={() => setSelectedJob(job)} 
+                  className={`cursor-pointer transition-all border-l-4 ${
+                    selectedJob?.id === job.id ? 'border-primary shadow-md bg-white' : 'border-transparent'
+                  }`}
+                >
+                  <CardContent className="p-5 flex justify-between items-center">
+                    <div>
+                      <h3 className="font-bold text-lg">{job.title}</h3>
+                      <div className="flex space-x-4 text-sm text-slate-500 mt-1">
+                        <span className="flex items-center"><Users className="w-4 h-4 mr-1" /> {job.applicants?.length || 0} applicants</span>
+                        <span className="flex items-center"><MapPin className="w-4 h-4 mr-1" /> {job.location}</span>
                       </div>
                     </div>
-                    <div className="flex flex-col space-y-2 ml-4">
-                      <Badge variant="secondary">{job.type}</Badge>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </div>
-                      {job.applications > 0 && (
-                        <Button size="sm" className="btn-primary">
-                          View Applications ({job.applications})
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDeleteJob(job.id); }}>
+                      <Trash2 className="w-4 h-4 text-slate-300 hover:text-red-500" />
+                    </Button>
+                  </CardContent>
+                </Card>
               ))}
             </div>
-            <div className="mt-6 text-center">
-              <Link to="/employer/post-job">
-                <Button className="btn-primary">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Post Another Job
-                </Button>
-              </Link>
+
+            <div className="lg:col-span-1">
+              <h2 className="font-semibold text-lg text-slate-700 mb-4">Applicant Review</h2>
+              {!selectedJob ? (
+                <div className="p-8 border-2 border-dashed rounded-xl text-center text-slate-400">Select a job to see applicants.</div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-3 bg-primary/5 rounded-lg border border-primary/10 mb-4">
+                    <p className="text-xs font-bold text-primary uppercase">Reviewing for:</p>
+                    <p className="font-bold text-slate-800">{selectedJob.title}</p>
+                  </div>
+                  {selectedJob.applicants?.length === 0 ? (
+                    <div className="p-8 bg-slate-100 rounded-xl text-center text-slate-400">No applicants yet.</div>
+                  ) : selectedJob.applicants.map((app: any) => (
+                    <Card key={app.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <Avatar>
+                            <AvatarImage src={app.worker_details?.profile_image} />
+                            <AvatarFallback className="bg-slate-200">{app.worker_details?.name?.[0]}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-bold text-sm text-slate-900">{app.worker_details?.name}</p>
+                            <p className="text-xs text-slate-500">{app.worker_details?.experience || 'No experience listed'}</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          {app.status === 'applied' || app.status === 'pending' ? (
+                            <>
+                              <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(app.id, 'accepted')}>Accept</Button>
+                              <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:bg-red-50" onClick={() => handleStatusUpdate(app.id, 'rejected')}>Reject</Button>
+                            </>
+                          ) : (
+                            <Badge className={`w-full justify-center py-1 ${app.status === 'hired' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {app.status === 'hired' ? 'ACCEPTED' : app.status.toUpperCase()}
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg text-slate-700">Decision History</h2>
+            {history.length === 0 ? (
+              <Card className="p-12 text-center text-slate-400">No past decisions recorded.</Card>
+            ) : history.map((item: any) => (
+              <Card key={item.id} className="p-4 flex justify-between items-center">
+                <div className="flex items-center space-x-4">
+                  <Avatar>
+                    <AvatarImage src={item.worker_details?.profile_image} />
+                    <AvatarFallback>{item.worker_details?.name?.[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-bold text-slate-900">{item.worker_details?.name}</p>
+                    <p className="text-sm text-slate-500">Job: {item.job_details?.title}</p>
+                  </div>
+                </div>
+                <Badge variant={item.status === 'hired' ? 'default' : 'destructive'}>
+                  {item.status === 'hired' ? 'ACCEPTED' : item.status.toUpperCase()}
+                </Badge>
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 };

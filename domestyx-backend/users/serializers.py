@@ -11,18 +11,22 @@ from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
 
+# users/serializers.py
+
+# users/serializers.py
+
+# users/serializers.py
 
 class WorkerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkerProfile
         fields = [
             "phone", "address", "city", "state", "zip_code", "country",
-            "bio", "hourly_rate", "years_of_experience", "services", 
+            "bio", "hourly_rate", "experience", "services", 
             "availability", "languages", "has_transportation", 
             "has_references", "is_background_checked", "profile_image"
         ]
         read_only_fields = ["user"]
-# -----------------------------
 # Register Serializer
 # -----------------------------
 # users/serializers.py
@@ -66,8 +70,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 # -----------------------------
 # JWT Custom Serializer
 # -----------------------------
+
+
+# ... (WorkerProfileSerializer and RegisterSerializer stay the same)
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        # This is where the 'role' is sent to React
         data = super().validate(attrs)
         user = self.user
         data['user'] = {
@@ -75,25 +84,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
-            "role": user.role,
+            "role": user.role,  # ✅ This is the critical line for redirects
         }
         return data
-
-# -----------------------------
-# Worker Profile Serializer
-# -----------------------------
-class WorkerProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WorkerProfile
-        fields = [
-            "first_name",
-            "last_name",
-            "email",
-            "hourly_rate",
-            "years_of_experience",
-            "state",
-            "country",      # new field
-            "zip_code",
-            "profile_image" # for image upload
-        ]
-        read_only_fields = ["user"]

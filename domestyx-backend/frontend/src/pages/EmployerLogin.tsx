@@ -1,16 +1,9 @@
-// src/pages/EmployerLogin.tsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -32,9 +25,19 @@ const EmployerLogin = () => {
 
     try {
       const data = await loginUser(email, password);
-      login(data.access, { ...data.user, role: data.user.role.toLowerCase() });
+      const userRole = data.user.role.toLowerCase();
+
+      // 1. Update Auth Context
+      login(data.access, { ...data.user, role: userRole });
+
       toast({ title: "Login Successful", description: "Welcome back!" });
-      navigate("/employer/dashboard");
+
+      // 2. Dynamic Redirect: Check role from server
+      if (userRole === "employer" || userRole === "client") {
+        navigate("/employer/dashboard", { replace: true });
+      } else {
+        navigate("/worker/dashboard", { replace: true });
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || "Invalid email or password.");
     } finally {
@@ -49,16 +52,14 @@ const EmployerLogin = () => {
           <Link to="/" className="inline-block">
             <h1 className="text-3xl font-bold text-primary">DomestyX</h1>
           </Link>
-          <h2 className="mt-6 text-2xl font-bold text-app-text">Client Login</h2>
-          <p className="mt-2 text-gray-600">Access your Client dashboard</p>
+          <h2 className="mt-6 text-2xl font-bold text-app-text">Employer Login</h2>
+          <p className="mt-2 text-gray-600">Post jobs and manage your requirements</p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Sign in to your account</CardTitle>
-            <CardDescription>
-              Enter your credentials to manage your job postings
-            </CardDescription>
+            <CardDescription>Enter your employer credentials</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,7 +68,6 @@ const EmployerLogin = () => {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-
               <div>
                 <Label htmlFor="email">Email address</Label>
                 <Input
@@ -80,7 +80,6 @@ const EmployerLogin = () => {
                   placeholder="employer@example.com"
                 />
               </div>
-
               <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -93,34 +92,16 @@ const EmployerLogin = () => {
                   placeholder="Enter your password"
                 />
               </div>
-
-              <Button
-                type="submit"
-                className="w-full btn-primary"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-2">
               <p className="text-sm text-gray-600">
-                Don't have an account?{" "}
-                <Link
-                  to="/employer/register"
-                  className="text-primary hover:text-primary/80 font-medium"
-                >
-                  Register as Employer
-                </Link>
+                Don't have an account? <Link to="/employer/register" className="text-primary hover:underline font-medium">Register as Employer</Link>
               </p>
-              <p className="mt-2 text-sm text-gray-600">
-                Are you a worker?{" "}
-                <Link
-                  to="/worker/login"
-                  className="text-accent hover:text-accent/80 font-medium"
-                >
-                  Worker Login
-                </Link>
+              <p className="text-sm text-gray-600">
+                Are you a worker? <Link to="/worker/login" className="text-accent hover:underline font-medium">Worker Login</Link>
               </p>
             </div>
           </CardContent>

@@ -28,7 +28,8 @@ INSTALLED_APPS = [
     'corsheaders',  # Required for React-Django communication
     'rest_framework',
     'rest_framework_simplejwt',
-    'users',
+    'users', 
+    'jobs',
 ]
 
 MIDDLEWARE = [

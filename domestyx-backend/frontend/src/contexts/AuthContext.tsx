@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/services/api';
 
 interface User {
+  profile_image: string;
   id: number;
   email: string;
   first_name: string;
@@ -38,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error("Failed to parse stored user:", error);
-        localStorage.clear(); // Clear potentially corrupted data
+        localStorage.clear();
       } finally {
         setIsLoading(false); 
       }
@@ -47,8 +48,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (accessToken: string, userObject: User) => {
-    // ✅ Normalization: Force role to lowercase to match Route requirements
-    const normalizedUser = {
+    // ✅ Force lowercase role to prevent "Worker" vs "worker" mismatch
+    const normalizedUser: User = {
       ...userObject,
       role: userObject.role.toLowerCase() as 'worker' | 'employer'
     };

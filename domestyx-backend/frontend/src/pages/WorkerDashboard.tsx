@@ -1,295 +1,225 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { 
-  User, 
-  Briefcase, 
-  Calendar, 
-  MapPin, 
-  LogOut,
-  Settings,
-  Star,
-  Clock,
-  CheckCircle,
-  IndianRupee
-} from "lucide-react";
+import api from "@/services/api"; 
+import { Search, MapPin, IndianRupee, CheckCircle, Filter, Clock } from "lucide-react";
 
 const WorkerDashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState([
-    {
-      id: 1,
-      title: "House Cleaning",
-      employer: "Sharma Family",
-      salary: "₹400/hour",
-      location: "Bandra, Mumbai",
-      type: "Part-time",
-      status: "available",
-      description: "Weekly house cleaning for a 3-bedroom apartment",
-      posted: "2 days ago"
-    },
-    {
-      id: 2,
-      title: "Babysitting",
-      employer: "Gupta Family",
-      salary: "₹350/hour",
-      location: "Koramangala, Bangalore",
-      type: "Weekends",
-      status: "applied",
-      description: "Weekend babysitting for 2 children (ages 5 and 8)",
-      posted: "1 week ago"
-    },
-    {
-      id: 3,
-      title: "Elder Care",
-      employer: "Patel Family",
-      salary: "₹500/hour",
-      location: "Connaught Place, Delhi",
-      type: "Full-time",
-      status: "interview",
-      description: "Companion care for elderly gentleman",
-      posted: "3 days ago"
+  
+  const [activeTab, setActiveTab] = useState<'browse' | 'applied'>('browse');
+  const [jobs, setJobs] = useState([]);
+  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("all");
+
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/worker/available-jobs/", {
+        params: {
+          search: searchQuery,
+          category: category !== "all" ? category : ""
+        }
+      }); 
+      setJobs(response.data);
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to load jobs", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  const fetchAppliedJobs = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/worker/my-applications/");
+      setAppliedJobs(response.data);
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to load applications", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!isAuthenticated)  {
+    if (!isAuthenticated) {
       navigate('/worker/login');
+      return;
     }
-  }, [isAuthenticated, navigate]);
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-    navigate('/');
+    if (activeTab === 'browse') {
+      fetchJobs();
+    } else {
+      fetchAppliedJobs();
+    }
+  }, [isAuthenticated, activeTab, category]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchJobs();
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'available':
-        return <Badge variant="outline" className="text-success border-success">Available</Badge>;
-      case 'applied':
-        return <Badge variant="outline" className="text-primary border-primary">Applied</Badge>;
-      case 'interview':
-        return <Badge variant="outline" className="text-accent border-accent">Interview</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
+  const handleApply = async (jobId: number) => {
+    try {
+      await api.post(`/jobs/${jobId}/apply/`); 
+      toast({ title: "Success", description: "Application sent!" });
+      fetchJobs(); 
+    } catch (err) {
+      toast({ title: "Error", description: "Application failed.", variant: "destructive" });
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  // ✅ Updated to match Backend status choices
+  const getStatusStyles = (status: string) => {
     switch (status) {
-      case 'available':
-        return <Briefcase className="h-4 w-4" />;
-      case 'applied':
-        return <Clock className="h-4 w-4" />;
-      case 'interview':
-        return <CheckCircle className="h-4 w-4" />;
-      default:
-        return <Briefcase className="h-4 w-4" />;
+      case 'hired': 
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'rejected': 
+        return 'bg-red-100 text-red-700 border-red-200';
+      case 'applied': 
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      default: 
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    if (status === 'hired') return 'ACCEPTED';
+    return status.toUpperCase();
   };
 
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-app-bg">
-      {/* Header */}
-      <header className="bg-app-bg shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-2xl font-bold text-primary">
-                DomestyX
-              </Link>
-              <span className="text-gray-300">|</span>
-              <span className="text-gray-600">Worker Dashboard</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link to="/worker/profile">
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Profile
-                </Button>
-              </Link>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+    <div className="min-h-screen bg-slate-50 pb-12">
+      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+          <Link to="/" className="text-2xl font-bold text-primary">DomestyX</Link>
+          <div className="flex items-center space-x-4">
+            <Link to="/worker/profile"><Button variant="ghost" size="sm">Profile</Button></Link>
+            <Button variant="outline" size="sm" onClick={() => { logout(); navigate('/'); }}>Logout</Button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src="/placeholder-avatar.jpg" />
-              <AvatarFallback className="bg-primary text-white text-lg">
-                {user.first_name.charAt(0)}{user.last_name.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-3xl font-bold text-app-text">
-                Welcome back, {user.first_name}!
-              </h1>
-              <p className="text-gray-600">Ready to find your next opportunity?</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Available Jobs</CardTitle>
-              <Briefcase className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">+2 from last week</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Applications</CardTitle>
-              <Calendar className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground">Pending responses</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Profile Views</CardTitle>
-              <User className="h-4 w-4 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">28</div>
-              <p className="text-xs text-muted-foreground">This month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rating</CardTitle>
-              <Star className="h-4 w-4 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">4.8</div>
-              <p className="text-xs text-muted-foreground">Based on 15 reviews</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Manage your profile and applications</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/worker/profile">
-                <Button className="btn-primary">
-                  <User className="h-4 w-4 mr-2" />
-                  Update Profile
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Worker Dashboard</h1>
+            <div className="flex bg-gray-200 p-1 rounded-lg">
+                <Button 
+                    variant={activeTab === 'browse' ? "secondary" : "ghost"} 
+                    size="sm" 
+                    onClick={() => setActiveTab('browse')}
+                    className={activeTab === 'browse' ? "bg-white shadow-sm hover:bg-white" : ""}
+                >
+                    Browse Jobs
                 </Button>
-              </Link>
-              <Button variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
-                View Applications
-              </Button>
-              <Button variant="outline">
-                <Star className="h-4 w-4 mr-2" />
-                Reviews & Ratings
-              </Button>
+                <Button 
+                    variant={activeTab === 'applied' ? "secondary" : "ghost"} 
+                    size="sm" 
+                    onClick={() => setActiveTab('applied')}
+                    className={activeTab === 'applied' ? "bg-white shadow-sm hover:bg-white" : ""}
+                >
+                    My Applications
+                </Button>
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
-        {/* Job Listings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Job Opportunities</CardTitle>
-            <CardDescription>Jobs matching your profile and preferences</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {jobs.map((job) => (
-                <div key={job.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        {getStatusIcon(job.status)}
-                        <h3 className="text-lg font-semibold text-app-text">{job.title}</h3>
-                        {getStatusBadge(job.status)}
-                      </div>
-                      <p className="text-gray-600 mb-2">{job.description}</p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <User className="h-4 w-4 mr-1" />
-                          {job.employer}
-                        </span>
-                        <span className="flex items-center">
-                          <IndianRupee className="h-4 w-4 mr-1" />
-                          {job.salary}
-                        </span>
-                        <span className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {job.location}
-                        </span>
-                        <span className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {job.posted}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col space-y-2 ml-4">
-                      <Badge variant="secondary">{job.type}</Badge>
-                      {job.status === 'available' && (
-                        <Button size="sm" className="btn-primary">
-                          Apply Now
-                        </Button>
-                      )}
-                      {job.status === 'applied' && (
-                        <Button size="sm" variant="outline" disabled>
-                          Applied
-                        </Button>
-                      )}
-                      {job.status === 'interview' && (
-                        <Button size="sm" className="btn-success">
-                          View Details
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+        {activeTab === 'browse' ? (
+          <>
+            <div className="mb-8 flex flex-col md:flex-row gap-4">
+              <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    placeholder="Search jobs..." 
+                    className="pl-10 bg-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
+                <Button type="submit">Search</Button>
+              </form>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-full md:w-[200px] bg-white">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="cleaning">Cleaning</SelectItem>
+                  <SelectItem value="babysitting">Babysitting</SelectItem>
+                  <SelectItem value="cooking">Cooking</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {loading ? (
+                <p className="text-center py-10 text-gray-500">Loading jobs...</p>
+              ) : jobs.length === 0 ? (
+                <Card className="p-10 text-center text-gray-400">No jobs available right now.</Card>
+              ) : jobs.map((job: any) => (
+                <Card key={job.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xl font-bold">{job.title}</h3>
+                        <Badge variant="outline" className="capitalize">{job.job_type}</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <span className="flex items-center"><IndianRupee className="h-4 w-4 mr-1 text-green-600" />{job.salary}</span>
+                        <span className="flex items-center"><MapPin className="h-4 w-4 mr-1 text-red-400" />{job.location}</span>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => handleApply(job.id)} 
+                      disabled={job.has_applied}
+                      className={job.has_applied ? "bg-slate-100 text-slate-400 border" : ""}
+                    >
+                      {job.has_applied ? <><CheckCircle className="h-4 w-4 mr-2"/> Applied</> : "Apply Now"}
+                    </Button>
+                  </CardContent>
+                </Card>
               ))}
             </div>
-            <div className="mt-6 text-center">
-              <Button variant="outline">
-                View All Jobs
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {loading ? (
+              <p className="text-center py-10 text-gray-500">Loading your applications...</p>
+            ) : appliedJobs.length === 0 ? (
+              <Card className="p-12 text-center text-gray-400">You haven't applied to any jobs yet.</Card>
+            ) : appliedJobs.map((app: any) => (
+              <Card key={app.id} className="border-l-4 border-l-primary">
+                <CardContent className="p-6 flex justify-between items-center">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold">{app.job_details?.title || "Position Title"}</h3>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Clock className="h-3 w-3 mr-1" /> 
+                      Applied on {app.applied_at ? new Date(app.applied_at).toLocaleDateString() : 'Recent'}
+                    </div>
+                  </div>
+                  {/* ✅ Dynamic Badge Labels and Colors */}
+                  <Badge className={`px-4 py-1 border shadow-sm ${getStatusStyles(app.status)}`}>
+                    {getStatusLabel(app.status)}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 };
