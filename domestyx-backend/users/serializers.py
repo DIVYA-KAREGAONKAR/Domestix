@@ -32,30 +32,33 @@ class WorkerProfileSerializer(serializers.ModelSerializer):
 # users/serializers.py
 
 # users/serializers.py
+# users/serializers.py
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
-    # ✅ This Meta class MUST be inside RegisterSerializer
     class Meta:
         model = User
         fields = ('email', 'password', 'password2', 'first_name', 'last_name', 'role')
 
     def validate(self, attrs):
+        # ✅ Standard Django validation for password matching
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
+            raise serializers.ValidationError({"password2": "Password fields didn't match."})
         return attrs
 
     def create(self, validated_data):
+        # Remove password2 before passing to create_user
         validated_data.pop('password2')
-        # ✅ Ensure 'role' is passed here to fix the redirect issue we discussed
+        
+        # ✅ Explicitly use create_user to handle hashing and role assignment
         user = User.objects.create_user(
             email=validated_data['email'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             password=validated_data['password'],
-            role=validated_data.get('role', 'worker') 
+            role=validated_data.get('role', 'worker') # Defaults to worker if role is missing
         )
         return user
 # -----------------------------
