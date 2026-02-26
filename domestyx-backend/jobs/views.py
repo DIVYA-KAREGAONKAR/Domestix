@@ -6,6 +6,7 @@ from django.db.models import Q
 from .models import Job, Application
 from .serializers import JobSerializer, ApplicationSerializer
 
+# 1. Browse Jobs (for Workers)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def available_jobs(request):
@@ -25,6 +26,18 @@ def available_jobs(request):
     serializer = JobSerializer(jobs, many=True, context={'request': request})
     return Response(serializer.data)
 
+# 2. Employer's Posted Jobs (The missing class that caused the Build Error)
+class EmployerJobListView(generics.ListCreateAPIView):
+    serializer_class = JobSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Job.objects.filter(employer=self.request.user).order_by('-posted_at')
+        
+    def perform_create(self, serializer):
+        serializer.save(employer=self.request.user)
+
+# 3. Worker's Applications
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def my_applications(request):
@@ -32,44 +45,37 @@ def my_applications(request):
     serializer = ApplicationSerializer(applications, many=True)
     return Response(serializer.data)
 
-# jobs/views.py
-
+# 4. Apply to Job
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def apply_to_job(request, job_id):
     try:
-        # 1. Look up the job
         job = Job.objects.get(id=job_id)
     except Job.DoesNotExist:
         return Response({'message': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
     
-    # 2. ✅ CRITICAL ROLE CHECK: Must match your CustomUser choice 'worker'
     if request.user.role != 'worker':
         return Response(
             {'message': 'Only workers can apply to jobs.'}, 
             status=status.HTTP_403_FORBIDDEN
         )
         
-    # 3. Check for existing application
     if Application.objects.filter(worker=request.user, job=job).exists():
         return Response({'message': 'Already applied for this job.'}, status=status.HTTP_400_BAD_REQUEST)
         
-    # 4. Create the application
     application = Application.objects.create(
         job=job, 
         worker=request.user, 
-        status='applied' # Matches your APPLICATION_STATUS choices
+        status='applied'
     )
     
     return Response(ApplicationSerializer(application).data, status=status.HTTP_201_CREATED)
 
-# jobs/views.py
-
+# 5. Update Application Status (Hire/Reject)
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_application_status(request, pk):
     try:
-        # Get application and ensure the employer owns the job
         application = Application.objects.get(pk=pk, job__employer=request.user)
     except Application.DoesNotExist:
         return Response({"error": "Application not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -78,7 +84,6 @@ def update_application_status(request, pk):
     
     if new_status == 'accepted':
         application.status = 'hired'
-        # ✅ FIX: Also mark the job as filled so it doesn't just "disappear" without context
         job = application.job
         job.status = 'filled' 
         job.save()
@@ -88,14 +93,10 @@ def update_application_status(request, pk):
     application.save()
     return Response(ApplicationSerializer(application).data)
 
-# jobs/views.py
-
-# jobs/views.py
-
+# 6. Employer Application History
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def employer_application_history(request):
-    # ✅ FIX: Added .select_related('job', 'worker') to prevent slow loading
     history = Application.objects.filter(
         job__employer=request.user
     ).select_related('job', 'worker').exclude(status='applied').order_by('-applied_at')
