@@ -64,22 +64,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'domestyx_backend.wsgi.application'
 
-# --- Database Logic ---
+# domestyx_backend/settings.py
+
+# --- Smart Database Logic ---
 if os.environ.get('DATABASE_URL'):
+    # This runs on RENDER (Production)
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
-            ssl_require=True 
+            # No manual SSL options needed for Atlas
         )
     }
-    # Fix for Aiven SSL certificate verification
-    DATABASES['default']['OPTIONS'] = {
-        'ssl': {
-            'check_hostname': False,
-            'verify_identity': False,
-        }
-    }
 else:
+    # This runs on your THINKPAD (Local)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -90,7 +87,6 @@ else:
             'PORT': '3306',
         }
     }
-
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

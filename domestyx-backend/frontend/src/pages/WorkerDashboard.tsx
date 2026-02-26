@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import api from "@/services/api"; 
-import { Search, MapPin, IndianRupee, CheckCircle, Filter, Clock } from "lucide-react";
+import { Search, MapPin, IndianRupee, CheckCircle, Filter, Clock, Loader2 } from "lucide-react";
 
 const WorkerDashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -18,6 +18,9 @@ const WorkerDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // ✅ New state to track which job is currently being processed
+  const [isApplying, setIsApplying] = useState<number | null>(null);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
@@ -53,17 +56,29 @@ const WorkerDashboard = () => {
       navigate('/worker/login');
       return;
     }
-    activeTab === 'browse' ? fetchJobs() : fetchAppliedJobs();
+    
+    // Only fetch if authenticated to prevent extra calls during logout
+    const timer = setTimeout(() => {
+      activeTab === 'browse' ? fetchJobs() : fetchAppliedJobs();
+    }, 300); // 300ms debounce to prevent spamming Render during state changes
+
+    return () => clearTimeout(timer);
   }, [isAuthenticated, activeTab, category]);
 
   const handleApply = async (jobId: number) => {
+    if (isApplying !== null) return; // ✅ Prevent double-clicks immediately
+
+    setIsApplying(jobId);
     try {
       await api.post(`/jobs/${jobId}/apply/`); 
       toast({ title: "Success", description: "Application sent successfully!" });
-      fetchJobs(); 
+      // Refresh jobs to update the "Applied" status locally
+      await fetchJobs(); 
     } catch (err: any) {
       const message = err.response?.data?.message || "Application failed.";
       toast({ title: "Error", description: message, variant: "destructive" });
+    } finally {
+      setIsApplying(null); // ✅ Release the lock
     }
   };
 
@@ -143,7 +158,10 @@ const WorkerDashboard = () => {
 
             <div className="grid grid-cols-1 gap-4">
               {loading ? (
-                <p className="text-center py-10 text-gray-500">Loading jobs...</p>
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-gray-500">Connecting to server...</p>
+                </div>
               ) : jobs.map((job: any) => (
                 <Card key={job.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -157,13 +175,15 @@ const WorkerDashboard = () => {
                         <span className="flex items-center"><MapPin className="h-4 w-4 mr-1 text-red-400" />{job.location}</span>
                       </div>
                     </div>
-                    {/* ✅ ROLE-BASED PROTECTION ON THE BUTTON */}
+                    
                     <Button 
                       onClick={() => handleApply(job.id)} 
-                      disabled={job.has_applied || user?.role !== 'worker'}
+                      disabled={job.has_applied || user?.role !== 'worker' || isApplying === job.id}
                       className={job.has_applied || user?.role !== 'worker' ? "bg-slate-100 text-slate-400 border" : ""}
                     >
-                      {job.has_applied ? (
+                      {isApplying === job.id ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
+                      ) : job.has_applied ? (
                         <><CheckCircle className="h-4 w-4 mr-2"/> Applied</>
                       ) : user?.role !== 'worker' ? (
                         "Worker Only"
