@@ -63,39 +63,42 @@ def apply_to_job(request, job_id):
     
     return Response(ApplicationSerializer(application).data, status=status.HTTP_201_CREATED)
 
+# jobs/views.py
+
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_application_status(request, pk):
     try:
+        # Get application and ensure the employer owns the job
         application = Application.objects.get(pk=pk, job__employer=request.user)
     except Application.DoesNotExist:
-        return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Application not found"}, status=status.HTTP_404_NOT_FOUND)
 
     new_status = request.data.get('status')
+    
     if new_status == 'accepted':
         application.status = 'hired'
+        # ✅ FIX: Also mark the job as filled so it doesn't just "disappear" without context
+        job = application.job
+        job.status = 'filled' 
+        job.save()
     elif new_status == 'rejected':
         application.status = 'rejected'
     
     application.save()
     return Response(ApplicationSerializer(application).data)
 
-class EmployerJobListView(generics.ListCreateAPIView):
-    serializer_class = JobSerializer
-    permission_classes = [IsAuthenticated]
+# jobs/views.py
 
-    def get_queryset(self):
-        return Job.objects.filter(employer=self.request.user).order_by('-posted_at')
-        
-    def perform_create(self, serializer):
-        serializer.save(employer=self.request.user)
+# jobs/views.py
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def employer_application_history(request):
+    # ✅ FIX: Added .select_related('job', 'worker') to prevent slow loading
     history = Application.objects.filter(
         job__employer=request.user
-    ).exclude(status='applied').order_by('-applied_at')
+    ).select_related('job', 'worker').exclude(status='applied').order_by('-applied_at')
     
     serializer = ApplicationSerializer(history, many=True)
     return Response(serializer.data)

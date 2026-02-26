@@ -20,15 +20,16 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     def get_worker_details(self, obj):
         worker = obj.worker
-        if hasattr(worker, 'worker_profile'):
-            profile = worker.worker_profile
-            return {
-                "name": f"{worker.first_name} {worker.last_name}",
-                "profile_image": profile.profile_image.url if profile.profile_image else None,
-                "bio": profile.bio,
-                "experience": profile.experience,
-            }
-        return {"name": f"{worker.first_name} {worker.last_name}", "bio": "No profile created."}
+        # getattr(worker, 'worker_profile', None) prevents an error 
+        # if the worker hasn't filled out their profile yet.
+        profile = getattr(worker, 'worker_profile', None)
+        
+        return {
+            "name": f"{worker.first_name} {worker.last_name}",
+            "profile_image": profile.profile_image.url if profile and profile.profile_image else None,
+            "bio": profile.bio if profile else "No profile bio.",
+            "experience": profile.experience if profile else "N/A",
+        }
 
 class JobSerializer(serializers.ModelSerializer):
     has_applied = serializers.SerializerMethodField()
