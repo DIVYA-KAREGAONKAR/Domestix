@@ -26,16 +26,16 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#1A73E8',
-					foreground: '#FFFFFF'
+					DEFAULT: 'hsl(var(--primary))',
+					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
 				},
 				accent: {
-					DEFAULT: '#FFA500',
-					foreground: '#FFFFFF'
+					DEFAULT: 'hsl(var(--accent))',
+					foreground: 'hsl(var(--accent-foreground))'
 				},
 				success: {
 					DEFAULT: '#34A853',
@@ -69,10 +69,10 @@ export default {
 				}
 			},
 			backgroundColor: {
-				'app-bg': '#F9FAFB'
+				'app-bg': 'hsl(var(--background))'
 			},
 			textColor: {
-				'app-text': '#212121'
+				'app-text': 'hsl(var(--foreground))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

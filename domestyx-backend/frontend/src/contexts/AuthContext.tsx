@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/services/api';
+import { AppRole, normalizeRole } from '@/lib/roles';
 
 interface User {
   profile_image: string;
@@ -7,7 +8,7 @@ interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: 'worker' | 'employer';
+  role: AppRole;
 }
 
 interface AuthContextType {
@@ -28,30 +29,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true); 
 
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       try {
         const token = localStorage.getItem('access_token');
         const storedUser = localStorage.getItem('user');
         
         if (token && storedUser) {
+          const parsedUser = JSON.parse(storedUser);
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          setUser(JSON.parse(storedUser));
+          // Source of truth: backend profile for whichever token is currently active.
+          const profileResponse = await api.get('/profile/');
+          const profile = profileResponse?.data || parsedUser;
+          const normalizedUser: User = {
+            ...parsedUser,
+            ...profile,
+            role: normalizeRole(profile?.role ?? parsedUser?.role),
+          };
+          localStorage.setItem('user', JSON.stringify(normalizedUser));
+          setUser(normalizedUser);
         }
       } catch (error) {
         console.error("Failed to parse stored user:", error);
-        localStorage.clear();
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        delete api.defaults.headers.common['Authorization'];
+        setUser(null);
       } finally {
         setIsLoading(false); 
       }
     };
-    initAuth();
+    void initAuth();
   }, []);
 
   const login = (accessToken: string, userObject: User) => {
-    // ✅ Force lowercase role to prevent "Worker" vs "worker" mismatch
     const normalizedUser: User = {
       ...userObject,
-      role: userObject.role.toLowerCase() as 'worker' | 'employer'
+      role: normalizeRole(userObject?.role),
     };
 
     localStorage.setItem('access_token', accessToken);

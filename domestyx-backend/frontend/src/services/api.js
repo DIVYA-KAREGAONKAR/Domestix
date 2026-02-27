@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { normalizeRole, roleLoginPath } from '@/lib/roles';
 
 // ✅ Base URL from your .env (points to port 8002)
 const API_URL = import.meta.env.VITE_API_URL;
@@ -27,9 +28,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      let loginPath = '/worker/login';
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+        loginPath = roleLoginPath(normalizeRole(storedUser?.role));
+      } catch (_) {
+        loginPath = '/worker/login';
+      }
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
-      window.location.href = '/worker/login'; 
+      window.location.href = loginPath;
     }
     return Promise.reject(error);
   }

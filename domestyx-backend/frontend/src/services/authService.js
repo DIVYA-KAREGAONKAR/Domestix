@@ -5,16 +5,7 @@ import api from './api'; // Assuming you have a central API config like axios
  * The payload is cleaned up to only send fields that exist on the CustomUser model.
  */
 export async function registerUser(userData) {
-  // 🐛 FIX: Removed 'username', 'phone', 'is_worker', and 'is_employer'
-  // as they no longer exist on your CustomUser model.
- const response = await api.post('/register/', {
-    email: userData.email,
-    password: userData.password,
-    password2: userData.password2,
-    first_name: userData.first_name,
-    last_name: userData.last_name,
-    role: userData.role,
-  });
+  const response = await api.post('/register/', userData);
   return response.data;
 }
 
@@ -54,7 +45,6 @@ export function logoutUser() {
   // You might also want to remove the user object if you store it
   localStorage.removeItem('user');
 }
-
 
 
 

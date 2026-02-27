@@ -15,6 +15,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { registerUser, loginUser } from "@/services/authService";
+import api from "@/services/api";
+import { normalizeRole, roleDashboardPath } from "@/lib/roles";
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const WorkerRegister = () => {
   const [formData, setFormData] = useState({
@@ -29,13 +32,81 @@ const WorkerRegister = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [error, setError] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpTarget, setOtpTarget] = useState("");
+  const [otpChannel, setOtpChannel] = useState<"email" | "phone">("email");
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "email") {
+      setOtpSent(false);
+      setOtpVerified(false);
+      setOtpCode("");
+    }
+  };
+
+  const handleSendOtp = async () => {
+    const target = otpChannel === "email" ? normalizeEmail(formData.email) : formData.phone.trim();
+    if (!target) {
+      setError(`Enter ${otpChannel} first to receive OTP.`);
+      return;
+    }
+    setError("");
+    setIsSendingOtp(true);
+    try {
+      const response = await api.post("/otp/send/", {
+        channel: otpChannel,
+        target,
+        purpose: "registration",
+      });
+      setOtpSent(true);
+      setOtpVerified(false);
+      setOtpCode("");
+      setOtpTarget(target);
+      toast({
+        title: "OTP sent",
+        description: response.data?.otp
+          ? `Use OTP: ${response.data.otp}`
+          : `Check your ${otpChannel}/console for OTP.`,
+      });
+    } catch (err: any) {
+      setError(err?.response?.data?.error || "Failed to send OTP.");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim()) {
+      setError("Enter OTP code.");
+      return;
+    }
+    setError("");
+    setIsVerifyingOtp(true);
+    const target = otpChannel === "email" ? normalizeEmail(formData.email) : formData.phone.trim();
+    try {
+      await api.post("/otp/verify/", {
+        channel: otpChannel,
+        target,
+        purpose: "registration",
+        code: otpCode.trim(),
+      });
+      setOtpVerified(true);
+      toast({ title: "OTP verified", description: `${otpChannel === "email" ? "Email" : "Phone"} verified successfully.` });
+    } catch (err: any) {
+      setOtpVerified(false);
+      setError(err?.response?.data?.error || "Invalid OTP.");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,26 +127,32 @@ const WorkerRegister = () => {
       setIsLoading(false);
       return;
     }
+    const cleanEmail = normalizeEmail(formData.email);
+    const currentOtpTarget = otpChannel === "email" ? cleanEmail : formData.phone.trim();
+    if (!otpVerified || otpTarget !== currentOtpTarget) {
+      setError(`Please verify your ${otpChannel} OTP before creating the account.`);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // 2. Register user on Aiven MySQL
       await registerUser({
         first_name: formData.first_name,
         last_name: formData.last_name,
-        email: formData.email,
+        email: cleanEmail,
         password: formData.password,
         password2: formData.confirmPassword,
         role: formData.role,
+        terms_accepted: true,
+        privacy_accepted: true,
       });
 
       // 3. Log in automatically to get JWT tokens
-      const data = await loginUser(formData.email, formData.password);
+      const data = await loginUser(cleanEmail, formData.password);
 
-      // ✅ FIX: Normalize role to lowercase to match ProtectedRoute logic
-      const normalizedUser = { 
-        ...data.user, 
-        role: data.user.role.toLowerCase() as 'worker' | 'employer' 
-      };
+      const userRole = normalizeRole(data?.user?.role);
+      const normalizedUser = { ...data.user, role: userRole };
 
       login(data.access, normalizedUser);
 
@@ -85,8 +162,7 @@ const WorkerRegister = () => {
         description: `Welcome, ${formData.first_name}! Taking you to your dashboard...`,
       });
 
-      // Navigate to the correct dashboard based on the role
-      navigate("/worker/dashboard");
+      navigate(roleDashboardPath(userRole), { replace: true });
 
     } catch (err: any) {
       // 5. Dynamic Error Handling
@@ -117,17 +193,17 @@ const WorkerRegister = () => {
   };
 
   return (
-    <div className="min-h-screen bg-app-bg flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="app-shell flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link to="/" className="inline-block">
             <h1 className="text-3xl font-bold text-primary">DomestyX</h1>
           </Link>
-          <h2 className="mt-6 text-2xl font-bold text-app-text">Worker Registration</h2>
-          <p className="mt-2 text-gray-600">Create your worker account</p>
+          <h2 className="mt-6 text-2xl font-semibold text-slate-900">Worker Registration</h2>
+          <p className="mt-2 text-slate-600">Create your professional worker account</p>
         </div>
 
-        <Card>
+        <Card className="glass-card border-slate-200">
           <CardHeader>
             <CardTitle>Create your account</CardTitle>
             <CardDescription>Join our community of skilled domestic workers</CardDescription>
@@ -156,6 +232,28 @@ const WorkerRegister = () => {
                 <Input id="email" name="email" type="email" required value={formData.email} onChange={handleInputChange} placeholder="worker@example.com" />
               </div>
 
+              <div className="space-y-2 rounded-md border p-3">
+                <div className="mb-2 flex gap-2">
+                  <Button type="button" size="sm" variant={otpChannel === "email" ? "default" : "outline"} onClick={() => setOtpChannel("email")}>Email OTP</Button>
+                  <Button type="button" size="sm" variant={otpChannel === "phone" ? "default" : "outline"} onClick={() => setOtpChannel("phone")}>Phone OTP</Button>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    placeholder="Enter OTP"
+                    disabled={!otpSent || otpVerified}
+                  />
+                  <Button type="button" variant="outline" onClick={handleSendOtp} disabled={isSendingOtp || (otpChannel === "email" ? !formData.email : !formData.phone)}>
+                    {isSendingOtp ? "Sending..." : otpSent ? "Resend OTP" : "Send OTP"}
+                  </Button>
+                  <Button type="button" onClick={handleVerifyOtp} disabled={isVerifyingOtp || !otpSent || otpVerified}>
+                    {isVerifyingOtp ? "Verifying..." : otpVerified ? "Verified" : "Verify"}
+                  </Button>
+                </div>
+                {otpVerified && <p className="text-xs text-green-600">{otpChannel === "email" ? "Email" : "Phone"} OTP verified.</p>}
+              </div>
+
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleInputChange} placeholder="+1 (555) 123-4567" />
@@ -174,7 +272,7 @@ const WorkerRegister = () => {
               <div className="flex items-center space-x-2">
                 <Checkbox id="agreeToTerms" checked={formData.agreeToTerms} onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, agreeToTerms: !!checked }))} />
                 <Label htmlFor="agreeToTerms" className="text-sm">
-                  I agree to the <Link to="/terms" className="text-primary hover:underline">Terms and Conditions</Link>
+                  I agree to the <Link to="/terms" className="text-primary hover:underline">Terms and Conditions</Link> and <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
                 </Label>
               </div>
 
@@ -184,7 +282,7 @@ const WorkerRegister = () => {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 Already have an account? <Link to="/worker/login" className="text-primary hover:text-primary/80 font-medium">Sign in</Link>
               </p>
             </div>

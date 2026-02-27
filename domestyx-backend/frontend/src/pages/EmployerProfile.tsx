@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,8 @@ import api from "@/services/api"; // ✅ Port 8002 connection
 import { Building2, Phone, MapPin, ArrowLeft } from "lucide-react";
 
 const EmployerProfile = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [profile, setProfile] = useState({
     company_name: "",
@@ -46,11 +47,23 @@ const EmployerProfile = () => {
     }
   };
 
+  const handleDeactivateAccount = async () => {
+    if (!window.confirm("Deactivate your account? You will be logged out immediately.")) return;
+    try {
+      await api.patch("/profile/deactivate/");
+      toast({ title: "Account deactivated", description: "Your profile has been deactivated." });
+      logout();
+      navigate("/");
+    } catch {
+      toast({ title: "Error", description: "Unable to deactivate account.", variant: "destructive" });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-app-bg py-12 px-4">
+    <div className="app-shell py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <Link to="/employer/dashboard" className="flex items-center text-primary"><ArrowLeft className="h-4 w-4 mr-2" /> Back</Link>
-        <Card>
+        <Card className="glass-card border-slate-200">
           <CardHeader><CardTitle>Company Profile</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={handleSave} className="space-y-4">
@@ -68,6 +81,9 @@ const EmployerProfile = () => {
               </div>
               <Button type="submit" className="w-full btn-primary" disabled={isSaving}>
                 {isSaving ? "Saving..." : "Save Profile"}
+              </Button>
+              <Button type="button" variant="destructive" className="w-full" onClick={() => void handleDeactivateAccount()}>
+                Deactivate Account
               </Button>
             </form>
           </CardContent>
