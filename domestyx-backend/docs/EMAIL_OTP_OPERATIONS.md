@@ -27,7 +27,7 @@
 - OTP expiration is configurable.
 
 ## 6. Rotation Policy
-- Rotate SMTP/API credentials every 60-90 days.
+- Rotate email provider API credentials every 60-90 days.
 - Rotate immediately after any suspected leak.
 - Keep separate credentials per environment (`dev`, `staging`, `prod`).
 

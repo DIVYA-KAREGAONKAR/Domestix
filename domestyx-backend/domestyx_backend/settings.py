@@ -164,9 +164,9 @@ if RENDER_EXTERNAL_HOSTNAME:
 # --- Email / OTP delivery settings ---
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND",
-    "django.core.mail.backends.smtp.EmailBackend",
+    "django.core.mail.backends.console.EmailBackend",
 )
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False") == "True"
@@ -209,4 +209,3 @@ if IS_PRODUCTION:
             f"Missing required production settings: {', '.join(missing)}. "
             "Set them in environment variables."
         )
-

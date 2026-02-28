@@ -15,12 +15,7 @@
 - `DATABASE_URL=<managed-db-url>` (recommended)
 - `ALLOWED_HOSTS=<backend-hostname>`
 - `CORS_ALLOWED_ORIGINS=<frontend-url>`
-- `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`
-- `EMAIL_HOST=<provider-host>`
-- `EMAIL_PORT=587`
-- `EMAIL_USE_TLS=True`
-- `EMAIL_HOST_USER=<smtp-user>`
-- `EMAIL_HOST_PASSWORD=<smtp-password-or-api-key>`
+- `RESEND_API_KEY=<resend-api-key>`
 - `DEFAULT_FROM_EMAIL=Domestyx <no-reply@yourdomain.com>`
 - `OTP_REQUIRE_VERIFIED_EMAIL_ON_REGISTER=True`
 - `OTP_REQUIRE_VERIFIED_PHONE_ON_REGISTER=True`
