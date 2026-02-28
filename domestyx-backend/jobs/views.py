@@ -9,12 +9,24 @@ from rest_framework.response import Response
 
 from django.utils import timezone
 
-from .models import Application, CallSession, ChatMessage, ChatThread, Job, JobOffer, SavedJob, ShortlistedWorker, WorkerReview
+from .models import (
+    Application,
+    CallSession,
+    ChatMessage,
+    ChatThread,
+    EmployerReview,
+    Job,
+    JobOffer,
+    SavedJob,
+    ShortlistedWorker,
+    WorkerReview,
+)
 from .serializers import (
     ApplicationSerializer,
     CallSessionSerializer,
     ChatMessageSerializer,
     ChatThreadSerializer,
+    EmployerReviewSerializer,
     JobSerializer,
     JobOfferSerializer,
     SavedJobSerializer,
@@ -120,6 +132,8 @@ def available_jobs(request):
     search_query = request.query_params.get('search', '') or request.query_params.get('q', '')
     category = request.query_params.get('category', '') or request.query_params.get('job_type', '')
     location = request.query_params.get('location', '')
+    min_salary = request.query_params.get('min_salary', '')
+    max_salary = request.query_params.get('max_salary', '')
     jobs = Job.objects.filter(status='active', review_status='approved').order_by('-posted_at')
     
     if search_query:
@@ -132,6 +146,23 @@ def available_jobs(request):
         jobs = jobs.filter(job_type__icontains=category)
     if location:
         jobs = jobs.filter(location__icontains=location)
+    try:
+        if min_salary != "":
+            min_val = float(min_salary)
+            jobs = jobs.filter(
+                Q(full_time_salary__gte=min_val) |
+                Q(part_time_salary__gte=min_val) |
+                Q(hourly_wage__gte=min_val)
+            )
+        if max_salary != "":
+            max_val = float(max_salary)
+            jobs = jobs.filter(
+                Q(full_time_salary__lte=max_val) |
+                Q(part_time_salary__lte=max_val) |
+                Q(hourly_wage__lte=max_val)
+            )
+    except ValueError:
+        return Response({"error": "min_salary/max_salary must be numeric."}, status=status.HTTP_400_BAD_REQUEST)
         
     serializer = JobSerializer(jobs, many=True, context={'request': request})
     return Response(serializer.data)
@@ -143,6 +174,8 @@ def public_jobs(request):
     search_query = request.query_params.get('search', '') or request.query_params.get('q', '')
     category = request.query_params.get('category', '') or request.query_params.get('job_type', '')
     location = request.query_params.get('location', '')
+    min_salary = request.query_params.get('min_salary', '')
+    max_salary = request.query_params.get('max_salary', '')
     jobs = Job.objects.filter(status='active', review_status='approved').order_by('-posted_at')
     
     if search_query:
@@ -155,6 +188,23 @@ def public_jobs(request):
         jobs = jobs.filter(job_type__icontains=category)
     if location:
         jobs = jobs.filter(location__icontains=location)
+    try:
+        if min_salary != "":
+            min_val = float(min_salary)
+            jobs = jobs.filter(
+                Q(full_time_salary__gte=min_val) |
+                Q(part_time_salary__gte=min_val) |
+                Q(hourly_wage__gte=min_val)
+            )
+        if max_salary != "":
+            max_val = float(max_salary)
+            jobs = jobs.filter(
+                Q(full_time_salary__lte=max_val) |
+                Q(part_time_salary__lte=max_val) |
+                Q(hourly_wage__lte=max_val)
+            )
+    except ValueError:
+        return Response({"error": "min_salary/max_salary must be numeric."}, status=status.HTTP_400_BAD_REQUEST)
         
     serializer = JobSerializer(jobs, many=True)
     return Response(serializer.data)
@@ -713,6 +763,67 @@ def worker_reviews(request):
         },
     )
     serializer = WorkerReviewSerializer(review)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def employer_reviews(request):
+    role = _user_role(request.user)
+    if request.method == "GET":
+        if role == "worker":
+            queryset = EmployerReview.objects.filter(reviewer=request.user).select_related("employer", "job")
+        elif role == "employer":
+            queryset = EmployerReview.objects.filter(employer=request.user).select_related("reviewer", "job")
+        else:
+            queryset = EmployerReview.objects.none()
+        serializer = EmployerReviewSerializer(queryset.order_by("-created_at"), many=True)
+        return Response(serializer.data)
+
+    if role != "worker":
+        return Response({"message": "Only workers can submit employer feedback."}, status=status.HTTP_403_FORBIDDEN)
+
+    employer_id = request.data.get("employer_id")
+    rating = request.data.get("rating")
+    if not employer_id or not rating:
+        return Response({"error": "employer_id and rating are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        employer = User.objects.get(id=employer_id, role="employer")
+    except User.DoesNotExist:
+        return Response({"error": "Employer not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        rating_int = int(rating)
+    except (TypeError, ValueError):
+        return Response({"error": "rating must be an integer between 1 and 5."}, status=status.HTTP_400_BAD_REQUEST)
+    if rating_int < 1 or rating_int > 5:
+        return Response({"error": "rating must be between 1 and 5."}, status=status.HTTP_400_BAD_REQUEST)
+
+    job = None
+    job_id = request.data.get("job_id")
+    if job_id:
+        try:
+            job = Job.objects.get(id=job_id, employer=employer)
+        except Job.DoesNotExist:
+            return Response({"error": "Job not found for this employer."}, status=status.HTTP_404_NOT_FOUND)
+        hired_exists = Application.objects.filter(job=job, worker=request.user, status="hired").exists()
+    else:
+        hired_exists = Application.objects.filter(job__employer=employer, worker=request.user, status="hired").exists()
+
+    if not hired_exists:
+        return Response({"error": "Feedback is allowed only after being hired by this employer."}, status=status.HTTP_400_BAD_REQUEST)
+
+    review, _ = EmployerReview.objects.update_or_create(
+        reviewer=request.user,
+        employer=employer,
+        job=job,
+        defaults={
+            "rating": rating_int,
+            "comment": (request.data.get("comment") or "").strip(),
+        },
+    )
+    serializer = EmployerReviewSerializer(review)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

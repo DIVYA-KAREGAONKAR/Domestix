@@ -7,6 +7,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
     AgencyWorkerSubmission,
     ComplianceReport,
+    GovernmentProfile,
     OTPVerification,
     RecruitmentAgencyProfile,
     SupportServiceProviderProfile,
@@ -65,6 +66,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     support_company_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
     support_service_categories = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
     support_contact_information = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    nationality = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
@@ -74,6 +76,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'agency_name', 'mohre_approval_number', 'agency_contact_information',
             'authority_name', 'credential_reference',
             'support_company_name', 'support_service_categories', 'support_contact_information',
+            'nationality',
             'terms_accepted', 'privacy_accepted', 'marketing_opt_in',
         )
 
@@ -103,6 +106,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         support_company_name = validated_data.pop('support_company_name', '')
         support_service_categories = validated_data.pop('support_service_categories', [])
         support_contact_information = validated_data.pop('support_contact_information', '')
+        nationality = validated_data.pop('nationality', '')
         
         # ✅ Explicitly use create_user to handle hashing and role assignment
         user = User.objects.create_user(
@@ -124,6 +128,15 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.employer_profile.job_location = job_location
             user.employer_profile.preferred_language = preferred_language
             user.employer_profile.save()
+        elif user.role == 'worker' and hasattr(user, 'worker_profile'):
+            user.worker_profile.phone = phone
+            user.worker_profile.nationality = nationality
+            if preferred_language:
+                existing_languages = list(user.worker_profile.languages or [])
+                if preferred_language not in existing_languages:
+                    existing_languages.append(preferred_language)
+                user.worker_profile.languages = existing_languages
+            user.worker_profile.save()
         elif user.role == 'agency' and hasattr(user, 'agency_profile'):
             user.agency_profile.agency_name = agency_name
             user.agency_profile.mohre_approval_number = mohre_approval_number
@@ -233,6 +246,13 @@ class RecruitmentAgencyProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecruitmentAgencyProfile
         fields = ["agency_name", "mohre_approval_number", "contact_information", "verification_document", "is_verified"]
+        read_only_fields = ["is_verified"]
+
+
+class GovernmentProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GovernmentProfile
+        fields = ["authority_name", "credential_reference", "verification_document", "is_verified"]
         read_only_fields = ["is_verified"]
 
 

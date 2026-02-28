@@ -193,6 +193,35 @@ class WorkerReview(models.Model):
         return f"{self.reviewer.email} -> {self.worker.email} ({self.rating})"
 
 
+class EmployerReview(models.Model):
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="employer_reviews_given",
+    )
+    employer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="employer_reviews_received",
+    )
+    job = models.ForeignKey(
+        Job,
+        on_delete=models.SET_NULL,
+        related_name="employer_reviews",
+        null=True,
+        blank=True,
+    )
+    rating = models.PositiveSmallIntegerField()
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("reviewer", "employer", "job")
+
+    def __str__(self):
+        return f"{self.reviewer.email} -> {self.employer.email} ({self.rating})"
+
+
 class ChatThread(models.Model):
     employer = models.ForeignKey(
         settings.AUTH_USER_MODEL,

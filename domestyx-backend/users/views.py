@@ -21,6 +21,7 @@ from .serializers import (
     RegisterSerializer, ProfileSerializer,
     ConsentSerializer, CustomTokenObtainPairSerializer, OTPRequestSerializer,
     OTPVerifySerializer, WorkerProfileSerializer, RecruitmentAgencyProfileSerializer,
+    GovernmentProfileSerializer,
     SupportServiceProviderProfileSerializer, AgencyWorkerSubmissionSerializer,
     ComplianceReportSerializer, SupportServiceMessageSerializer, SupportServiceRequestSerializer,
 )
@@ -28,13 +29,14 @@ from .models import (
     OTPVerification,
     WorkerProfile,
     RecruitmentAgencyProfile,
+    GovernmentProfile,
     SupportServiceProviderProfile,
     SupportServiceMessage,
     AgencyWorkerSubmission,
     ComplianceReport,
     SupportServiceRequest,
 )
-from jobs.models import Application, ChatMessage, ChatThread, Job, WorkerReview
+from jobs.models import Application, ChatMessage, ChatThread, EmployerReview, Job, WorkerReview
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -222,8 +224,16 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 @permission_classes([permissions.IsAuthenticated])
 def deactivate_account(request):
     request.user.is_active = False
-    request.user.save(update_fields=["is_active"])
+    request.user.deactivated_at = timezone.now()
+    request.user.save(update_fields=["is_active", "deactivated_at"])
     return Response({"message": "Account deactivated successfully."}, status=status.HTTP_200_OK)
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def delete_account(request):
+    request.user.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 # -----------------------------
 # Worker Profile
@@ -293,6 +303,7 @@ def send_otp(request):
         min_next_send = latest_sent.created_at + timedelta(seconds=settings.OTP_RESEND_COOLDOWN_SECONDS)
         if now < min_next_send:
             retry_after = int((min_next_send - now).total_seconds())
+            logger.warning("otp_rate_limited_cooldown channel=%s target=%s retry_after=%s", payload["channel"], _mask_target(target), retry_after)
             return Response(
                 {"error": f"Please wait {retry_after} seconds before requesting another OTP."},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -305,6 +316,7 @@ def send_otp(request):
         created_at__gte=now - timedelta(hours=1),
     ).count()
     if sends_last_hour >= settings.OTP_MAX_SENDS_PER_HOUR:
+        logger.warning("otp_rate_limited_hourly channel=%s target=%s count=%s", payload["channel"], _mask_target(target), sends_last_hour)
         return Response(
             {"error": "Too many OTP requests. Please try again later."},
             status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -343,6 +355,7 @@ def send_otp(request):
                 recipient_list=[otp.target],
                 fail_silently=False,
             )
+            logger.info("otp_send_success channel=email target=%s", _mask_target(otp.target))
         except Exception:
             logger.exception("Failed sending OTP email to %s", _mask_target(otp.target))
             if settings.DEBUG:
@@ -359,6 +372,7 @@ def send_otp(request):
             data["delivery"] = "Phone OTP sent."
             if settings.DEBUG:
                 data["otp"] = code
+            logger.info("otp_send_success channel=phone target=%s", _mask_target(otp.target))
         except Exception:
             logger.exception("Failed sending OTP SMS to %s", _mask_target(otp.target))
             if settings.DEBUG:
@@ -390,21 +404,25 @@ def verify_otp(request):
         is_used=False,
     ).order_by("-created_at").first()
     if not otp:
+        logger.info("otp_verify_not_found channel=%s target=%s", payload["channel"], _mask_target(target))
         return Response({"error": "OTP not found."}, status=status.HTTP_404_NOT_FOUND)
 
     if otp.is_expired():
         otp.is_used = True
         otp.save(update_fields=["is_used"])
+        logger.info("otp_verify_expired channel=%s target=%s", payload["channel"], _mask_target(target))
         return Response({"error": "OTP has expired."}, status=status.HTTP_400_BAD_REQUEST)
 
     if otp.attempts >= otp.max_attempts:
         otp.is_used = True
         otp.save(update_fields=["is_used"])
+        logger.warning("otp_verify_max_attempts channel=%s target=%s", payload["channel"], _mask_target(target))
         return Response({"error": "Maximum verification attempts exceeded."}, status=status.HTTP_400_BAD_REQUEST)
 
     if not check_password(payload["code"], otp.code_hash):
         otp.attempts += 1
         otp.save(update_fields=["attempts"])
+        logger.info("otp_verify_invalid channel=%s target=%s attempts=%s", payload["channel"], _mask_target(target), otp.attempts)
         return Response({"error": "Invalid OTP code."}, status=status.HTTP_400_BAD_REQUEST)
 
     otp.is_used = True
@@ -415,6 +433,7 @@ def verify_otp(request):
     else:
         otp.save(update_fields=["is_used", "verified_at"])
 
+    logger.info("otp_verify_success channel=%s target=%s", payload["channel"], _mask_target(target))
     return Response({"message": "OTP verified successfully.", "verified": True})
 
 
@@ -491,6 +510,33 @@ def agency_worker_submissions(request):
     if update_fields:
         submission.save(update_fields=update_fields)
     return Response(AgencyWorkerSubmissionSerializer(submission).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["PATCH"])
+@permission_classes([permissions.IsAuthenticated])
+def update_agency_worker_submission(request, submission_id):
+    role = _user_role(request.user)
+    if role not in {"agency", "government"}:
+        return Response({"message": "Only agency or government users can update submission status."}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        submission = AgencyWorkerSubmission.objects.get(id=submission_id)
+    except AgencyWorkerSubmission.DoesNotExist:
+        return Response({"error": "Submission not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if role == "agency" and submission.agency_id != request.user.id:
+        return Response({"message": "Not allowed to update this submission."}, status=status.HTTP_403_FORBIDDEN)
+
+    new_status = (request.data.get("status") or "").strip().lower()
+    allowed_status = {"submitted", "verified", "rejected"}
+    if new_status and new_status not in allowed_status:
+        return Response({"error": "Invalid status value."}, status=status.HTTP_400_BAD_REQUEST)
+    if new_status:
+        submission.status = new_status
+
+    if "notes" in request.data:
+        submission.notes = (request.data.get("notes") or "").strip()
+    submission.save()
+    return Response(AgencyWorkerSubmissionSerializer(submission).data)
 
 
 @api_view(["GET", "POST"])
@@ -579,7 +625,7 @@ def government_analytics(request):
                 "hired": Application.objects.filter(status="hired").count(),
                 "chat_threads": ChatThread.objects.count(),
                 "chat_messages": ChatMessage.objects.count(),
-                "reviews": WorkerReview.objects.count(),
+                "reviews": WorkerReview.objects.count() + EmployerReview.objects.count(),
                 "compliance_reports_open": ComplianceReport.objects.filter(status__in=["open", "in_review"]).count(),
             },
             "last_30_days": {
@@ -588,6 +634,21 @@ def government_analytics(request):
             },
         }
     )
+
+
+@api_view(["GET", "PUT"])
+@permission_classes([permissions.IsAuthenticated])
+@parser_classes([JSONParser, MultiPartParser, FormParser])
+def government_profile(request):
+    if _user_role(request.user) != "government":
+        return Response({"message": "Only government users can access this endpoint."}, status=status.HTTP_403_FORBIDDEN)
+    profile, _ = GovernmentProfile.objects.get_or_create(user=request.user)
+    if request.method == "PUT":
+        serializer = GovernmentProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    return Response(GovernmentProfileSerializer(profile).data)
 
 
 @api_view(["GET", "PUT"])

@@ -41,6 +41,7 @@ class GovernmentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="government_profile")
     authority_name = models.CharField(max_length=150, blank=True)
     credential_reference = models.CharField(max_length=120, blank=True)
+    verification_document = models.FileField(upload_to="government_documents/", blank=True, null=True)
     is_verified = models.BooleanField(default=False)
 
     def __str__(self):
@@ -94,6 +95,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    deactivated_at = models.DateTimeField(blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     terms_accepted = models.BooleanField(default=False)
     terms_accepted_at = models.DateTimeField(blank=True, null=True)

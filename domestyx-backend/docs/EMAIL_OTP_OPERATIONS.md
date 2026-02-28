@@ -6,7 +6,7 @@
 - Access to email credentials must be restricted and audited.
 
 ## 2. Recommended Email Provider
-- Use a transactional provider (SendGrid, Postmark, SES, Mailgun).
+- Use Resend for transactional email OTP delivery.
 - Use a domain sender identity (example: `no-reply@yourdomain.com`), not personal email.
 
 ## 3. Required Environment Variables
@@ -44,4 +44,3 @@
   - invalidate active sessions if needed
   - check logs for abuse window
   - increase OTP strictness temporarily
-

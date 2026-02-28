@@ -1,5 +1,16 @@
 from rest_framework import serializers
-from .models import Application, CallSession, ChatMessage, ChatThread, Job, JobOffer, SavedJob, ShortlistedWorker, WorkerReview
+from .models import (
+    Application,
+    CallSession,
+    ChatMessage,
+    ChatThread,
+    EmployerReview,
+    Job,
+    JobOffer,
+    SavedJob,
+    ShortlistedWorker,
+    WorkerReview,
+)
 
 class ApplicationSerializer(serializers.ModelSerializer):
     job_details = serializers.SerializerMethodField()
@@ -13,9 +24,12 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     def get_job_details(self, obj):
         return {
+            "id": obj.job.id,
             "title": obj.job.title,
             "location": obj.job.location,
-            "salary": obj.job.salary
+            "salary": obj.job.salary,
+            "employer_id": obj.job.employer_id,
+            "employer_name": f"{obj.job.employer.first_name} {obj.job.employer.last_name}".strip() or obj.job.employer.email,
         }
 
     def get_worker_details(self, obj):
@@ -116,6 +130,20 @@ class WorkerReviewSerializer(serializers.ModelSerializer):
         model = WorkerReview
         fields = [
             "id", "reviewer", "reviewer_name", "worker", "worker_name",
+            "job", "job_title", "rating", "comment", "created_at",
+        ]
+        read_only_fields = ["reviewer", "created_at"]
+
+
+class EmployerReviewSerializer(serializers.ModelSerializer):
+    reviewer_name = serializers.CharField(source="reviewer.first_name", read_only=True)
+    employer_name = serializers.CharField(source="employer.first_name", read_only=True)
+    job_title = serializers.CharField(source="job.title", read_only=True)
+
+    class Meta:
+        model = EmployerReview
+        fields = [
+            "id", "reviewer", "reviewer_name", "employer", "employer_name",
             "job", "job_title", "rating", "comment", "created_at",
         ]
         read_only_fields = ["reviewer", "created_at"]

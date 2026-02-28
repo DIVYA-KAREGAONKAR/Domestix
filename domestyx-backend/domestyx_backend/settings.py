@@ -188,7 +188,7 @@ OTP_REQUIRE_VERIFIED_EMAIL_ON_REGISTER = (
     os.environ.get("OTP_REQUIRE_VERIFIED_EMAIL_ON_REGISTER", "True") == "True"
 )
 OTP_REQUIRE_VERIFIED_PHONE_ON_REGISTER = (
-    os.environ.get("OTP_REQUIRE_VERIFIED_PHONE_ON_REGISTER", "False") == "True"
+    os.environ.get("OTP_REQUIRE_VERIFIED_PHONE_ON_REGISTER", "True") == "True"
 )
 
 # --- SMS / Phone OTP provider settings ---
@@ -209,5 +209,4 @@ if IS_PRODUCTION:
             f"Missing required production settings: {', '.join(missing)}. "
             "Set them in environment variables."
         )
-
 

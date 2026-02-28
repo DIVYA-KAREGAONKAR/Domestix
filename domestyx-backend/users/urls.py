@@ -4,8 +4,9 @@ from .views import (
     send_otp, upload_worker_image, user_consent, verify_otp, worker_profile,
     agency_profile, agency_worker_submissions, compliance_reports,
     update_compliance_report, support_provider_profile, support_service_requests,
-    update_support_service_request, government_analytics,
-    public_workers, deactivate_account, support_service_messages, support_providers,
+    update_support_service_request, government_analytics, government_profile,
+    public_workers, deactivate_account, delete_account, support_service_messages, support_providers,
+    update_agency_worker_submission,
 )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -27,12 +28,15 @@ urlpatterns = [
     # Profile Endpoints
     path("profile/", ProfileView.as_view(), name="profile"),  # General user profile
     path("profile/deactivate/", deactivate_account, name="deactivate-account"),
+    path("profile/delete/", delete_account, name="delete-account"),
     path("workers/public/", public_workers, name="public-workers"),
     path("consent/", user_consent, name="user-consent"),
     path("worker/profile/", worker_profile, name="worker-profile"),
     path("worker/profile/upload-image/", upload_worker_image, name="worker-upload-image"),
     path("agency/profile/", agency_profile, name="agency-profile"),
     path("agency/worker-submissions/", agency_worker_submissions, name="agency-worker-submissions"),
+    path("agency/worker-submissions/<int:submission_id>/", update_agency_worker_submission, name="agency-worker-submission-update"),
+    path("government/profile/", government_profile, name="government-profile"),
     path("reports/compliance/", compliance_reports, name="compliance-reports"),
     path("reports/compliance/<int:report_id>/", update_compliance_report, name="update-compliance-report"),
     path("reports/analytics/", government_analytics, name="government-analytics"),

@@ -30,6 +30,7 @@ urlpatterns = [
     path('reports/job-reviews/', views.government_job_reviews, name='government-job-reviews'),
     path('reports/job-reviews/<int:job_id>/', views.government_update_job_review, name='government-update-job-review'),
     path('reviews/', views.worker_reviews, name='worker-reviews'),
+    path('employer-reviews/', views.employer_reviews, name='employer-reviews'),
     path('chat/threads/', views.chat_threads, name='chat-threads'),
     path('chat/threads/<int:thread_id>/messages/', views.chat_messages, name='chat-messages'),
     path('chat/threads/<int:thread_id>/calls/', views.chat_calls, name='chat-calls'),
