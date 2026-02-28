@@ -244,6 +244,11 @@ const WorkerRegister = () => {
  <Input id="email" name="email" type="email" required value={formData.email} onChange={handleInputChange} placeholder="worker@example.com" />
  </div>
 
+ <div>
+ <Label htmlFor="phone">Phone Number</Label>
+ <Input id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleInputChange} placeholder="+1 (555) 123-4567" />
+ </div>
+
  <div className="space-y-2 rounded-md border p-3">
  <div className="mb-2 flex gap-2">
  <Button type="button" size="sm" variant={otpChannel === "email" ? "default" : "outline"} onClick={() => setOtpChannel("email")}>Email OTP</Button>
@@ -265,11 +270,6 @@ const WorkerRegister = () => {
  </div>
  {otpVerified && <p className="text-xs text-green-600">{otpChannel === "email" ? "Email" : "Phone"} OTP verified.</p>}
  <p className="text-xs text-gray-600">Email verified: {otpVerifiedTargets.email ? "Yes" : "No"} | Phone verified: {otpVerifiedTargets.phone ? "Yes" : "No"}</p>
- </div>
-
- <div>
- <Label htmlFor="phone">Phone Number</Label>
- <Input id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleInputChange} placeholder="+1 (555) 123-4567" />
  </div>
 
  <div className="grid grid-cols-2 gap-4">

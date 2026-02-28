@@ -258,6 +258,18 @@ const EmployerRegister = () => {
  />
  </div>
 
+ <div className="space-y-2">
+ <Label htmlFor="phone">Phone Number</Label>
+ <Input
+ id="phone"
+ name="phone"
+ type="text"
+ value={formData.phone}
+ onChange={handleInputChange}
+ placeholder="+971..."
+ />
+ </div>
+
  <div className="space-y-2 rounded-md border p-3">
  <div className="mb-2 flex gap-2">
  <Button type="button" size="sm" variant={otpChannel === "email" ? "default" : "outline"} onClick={() => setOtpChannel("email")}>Email OTP</Button>
@@ -302,17 +314,6 @@ const EmployerRegister = () => {
  value={formData.company_name}
  onChange={handleInputChange}
  placeholder="Your business name"
- />
- </div>
- <div className="space-y-2">
- <Label htmlFor="phone">Phone Number</Label>
- <Input
- id="phone"
- name="phone"
- type="text"
- value={formData.phone}
- onChange={handleInputChange}
- placeholder="+971..."
  />
  </div>
  <div className="space-y-2">
