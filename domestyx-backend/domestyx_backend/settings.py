@@ -162,6 +162,7 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # --- Email / OTP delivery settings ---
+EMAIL_PROVIDER = os.environ.get("EMAIL_PROVIDER", "smtp").strip().lower()
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend",
@@ -177,6 +178,8 @@ DEFAULT_FROM_EMAIL = os.environ.get(
     "DEFAULT_FROM_EMAIL",
     EMAIL_HOST_USER or "no-reply@domestyx.com",
 )
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "").strip()
+RESEND_API_URL = os.environ.get("RESEND_API_URL", "https://api.resend.com/emails").strip()
 
 # --- OTP settings ---
 OTP_EXPIRY_SECONDS = int(os.environ.get("OTP_EXPIRY_SECONDS", "300"))
@@ -208,10 +211,14 @@ if IS_PRODUCTION:
             "Set them in environment variables."
         )
 
-    if EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
-        raise RuntimeError("EMAIL_BACKEND cannot use console backend in production.")
+    if EMAIL_PROVIDER not in {"smtp", "resend", "console"}:
+        raise RuntimeError("EMAIL_PROVIDER must be one of: smtp, resend, console.")
+    if EMAIL_PROVIDER == "console":
+        raise RuntimeError("EMAIL_PROVIDER cannot be console in production.")
 
-    if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+    if EMAIL_PROVIDER == "smtp":
+        if EMAIL_BACKEND != "django.core.mail.backends.smtp.EmailBackend":
+            raise RuntimeError("EMAIL_BACKEND must be SMTP backend when EMAIL_PROVIDER=smtp.")
         required_smtp_settings = [
             ("EMAIL_HOST", EMAIL_HOST),
             ("EMAIL_HOST_USER", EMAIL_HOST_USER),
@@ -231,3 +238,15 @@ if IS_PRODUCTION:
             raise RuntimeError("EMAIL_USE_TLS and EMAIL_USE_SSL cannot both be True.")
         if not EMAIL_USE_TLS and not EMAIL_USE_SSL:
             raise RuntimeError("Set either EMAIL_USE_TLS=True or EMAIL_USE_SSL=True for SMTP in production.")
+
+    if EMAIL_PROVIDER == "resend":
+        required_resend_settings = [
+            ("RESEND_API_KEY", RESEND_API_KEY),
+            ("DEFAULT_FROM_EMAIL", DEFAULT_FROM_EMAIL),
+            ("RESEND_API_URL", RESEND_API_URL),
+        ]
+        missing_resend = [key for key, value in required_resend_settings if not value]
+        if missing_resend:
+            raise RuntimeError(
+                f"Missing required Resend API settings in production: {', '.join(missing_resend)}."
+            )

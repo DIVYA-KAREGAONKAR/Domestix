@@ -1,8 +1,10 @@
 import random
+import json
 from datetime import timedelta
 import logging
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -86,6 +88,48 @@ def _send_phone_otp(phone_number, code):
         logger.info("SMS OTP (console provider) to %s -> %s", _mask_target(phone_number), code)
         return
     raise RuntimeError(f"Unsupported SMS provider: {provider}")
+
+
+def _send_email_otp(email, code):
+    provider = (getattr(settings, "EMAIL_PROVIDER", "smtp") or "smtp").strip().lower()
+    if provider == "resend":
+        api_key = getattr(settings, "RESEND_API_KEY", "")
+        api_url = getattr(settings, "RESEND_API_URL", "https://api.resend.com/emails")
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@domestyx.com")
+        if not api_key or not from_email:
+            raise RuntimeError("Resend API settings are not configured.")
+        body = json.dumps(
+            {
+                "from": from_email,
+                "to": [email],
+                "subject": "Domestyx OTP Verification Code",
+                "text": f"Your OTP code is {code}. It expires in 5 minutes.",
+            }
+        ).encode("utf-8")
+        request = Request(url=api_url, data=body, method="POST")
+        request.add_header("Authorization", f"Bearer {api_key}")
+        request.add_header("Content-Type", "application/json")
+        try:
+            with urlopen(request, timeout=10) as response:
+                if response.status < 200 or response.status >= 300:
+                    raise RuntimeError(f"Resend API send failed with status {response.status}")
+        except HTTPError as exc:
+            err_body = exc.read().decode("utf-8", errors="ignore")
+            raise RuntimeError(f"Resend API failed with status {exc.code}: {err_body[:300]}") from exc
+        return
+    if provider == "smtp":
+        send_mail(
+            subject="Domestyx OTP Verification Code",
+            message=f"Your OTP code is {code}. It expires in 5 minutes.",
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@domestyx.com"),
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        return
+    if provider == "console":
+        logger.info("Email OTP (console provider) to %s -> %s", _mask_target(email), code)
+        return
+    raise RuntimeError(f"Unsupported email provider: {provider}")
 
 
 @api_view(["GET"])
@@ -348,13 +392,7 @@ def send_otp(request):
     }
     if otp.channel == "email":
         try:
-            send_mail(
-                subject="Domestyx OTP Verification Code",
-                message=f"Your OTP code is {code}. It expires in 5 minutes.",
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@domestyx.com"),
-                recipient_list=[otp.target],
-                fail_silently=False,
-            )
+            _send_email_otp(otp.target, code)
             logger.info("otp_send_success channel=email target=%s", _mask_target(otp.target))
         except Exception:
             logger.exception("Failed sending OTP email to %s", _mask_target(otp.target))
