@@ -35,9 +35,10 @@ const EmployerRegister = () => {
  const [error, setError] = useState("");
  const [otpCode, setOtpCode] = useState("");
  const [otpSent, setOtpSent] = useState(false);
- const [otpVerified, setOtpVerified] = useState(false);
  const [otpVerifiedTargets, setOtpVerifiedTargets] = useState<{ email: string; phone: string }>({ email: "", phone: "" });
  const [otpChannel, setOtpChannel] = useState<"email" | "phone">("email");
+ const currentOtpTarget = otpChannel === "email" ? normalizeEmail(formData.email) : formData.phone.trim();
+ const isCurrentChannelVerified = currentOtpTarget !== "" && (otpChannel === "email" ? otpVerifiedTargets.email === currentOtpTarget : otpVerifiedTargets.phone === currentOtpTarget);
  
  const { login } = useAuth();
  const navigate = useNavigate();
@@ -50,13 +51,11 @@ const EmployerRegister = () => {
  }));
  if (name === "email") {
  setOtpSent(false);
- setOtpVerified(false);
  setOtpCode("");
  setOtpVerifiedTargets((prev) => ({ ...prev, email: "" }));
  }
  if (name === "phone") {
  setOtpSent(false);
- setOtpVerified(false);
  setOtpCode("");
  setOtpVerifiedTargets((prev) => ({ ...prev, phone: "" }));
  }
@@ -77,7 +76,6 @@ const EmployerRegister = () => {
  purpose: "registration",
  });
  setOtpSent(true);
- setOtpVerified(false);
  setOtpCode("");
  toast({
  title: "OTP sent",
@@ -107,11 +105,9 @@ const EmployerRegister = () => {
  purpose: "registration",
  code: otpCode.trim(),
  });
- setOtpVerified(true);
  setOtpVerifiedTargets((prev) => ({ ...prev, [otpChannel]: target }));
  toast({ title: "OTP verified", description: `${otpChannel === "email" ? "Email" : "Phone"} verified successfully.` });
  } catch (err: any) {
- setOtpVerified(false);
  setError(err?.response?.data?.error || "Invalid OTP.");
  } finally {
  setIsVerifyingOtp(false);
@@ -280,16 +276,16 @@ const EmployerRegister = () => {
  value={otpCode}
  onChange={(e) => setOtpCode(e.target.value)}
  placeholder="Enter OTP"
- disabled={!otpSent || otpVerified}
+ disabled={!otpSent || isCurrentChannelVerified}
  />
  <Button type="button" variant="outline" onClick={handleSendOtp} disabled={isSendingOtp || (otpChannel === "email" ? !formData.email : !formData.phone)}>
  {isSendingOtp ? "Sending..." : otpSent ? "Resend OTP" : "Send OTP"}
  </Button>
- <Button type="button" onClick={handleVerifyOtp} disabled={isVerifyingOtp || !otpSent || otpVerified}>
- {isVerifyingOtp ? "Verifying..." : otpVerified ? "Verified" : "Verify"}
+ <Button type="button" onClick={handleVerifyOtp} disabled={isVerifyingOtp || !otpSent || isCurrentChannelVerified}>
+ {isVerifyingOtp ? "Verifying..." : isCurrentChannelVerified ? "Verified" : "Verify"}
  </Button>
  </div>
- {otpVerified && <p className="text-xs text-green-600">{otpChannel === "email" ? "Email" : "Phone"} OTP verified.</p>}
+ {isCurrentChannelVerified && <p className="text-xs text-green-600">{otpChannel === "email" ? "Email" : "Phone"} OTP verified.</p>}
  <p className="text-xs text-gray-600">Email verified: {otpVerifiedTargets.email ? "Yes" : "No"} | Phone verified: {otpVerifiedTargets.phone ? "Yes" : "No"}</p>
  </div>
 

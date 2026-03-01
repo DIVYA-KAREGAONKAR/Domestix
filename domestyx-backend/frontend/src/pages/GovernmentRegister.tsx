@@ -32,9 +32,10 @@ const GovernmentRegister = () => {
  const [error, setError] = useState("");
  const [otpCode, setOtpCode] = useState("");
  const [otpSent, setOtpSent] = useState(false);
- const [otpVerified, setOtpVerified] = useState(false);
  const [otpVerifiedTargets, setOtpVerifiedTargets] = useState<{ email: string; phone: string }>({ email: "", phone: "" });
  const [otpChannel, setOtpChannel] = useState<"email" | "phone">("email");
+ const currentOtpTarget = otpChannel === "email" ? normalizeEmail(formData.email) : formData.phone.trim();
+ const isCurrentChannelVerified = currentOtpTarget !== "" && (otpChannel === "email" ? otpVerifiedTargets.email === currentOtpTarget : otpVerifiedTargets.phone === currentOtpTarget);
  const { login } = useAuth();
  const navigate = useNavigate();
 
@@ -43,7 +44,6 @@ const GovernmentRegister = () => {
  setFormData((prev) => ({ ...prev, [name]: value }));
  if (name === "email" || name === "phone") {
  setOtpSent(false);
- setOtpVerified(false);
  setOtpCode("");
  if (name === "email") setOtpVerifiedTargets((prev) => ({ ...prev, email: "" }));
  if (name === "phone") setOtpVerifiedTargets((prev) => ({ ...prev, phone: "" }));
@@ -58,7 +58,6 @@ const GovernmentRegister = () => {
  try {
  const response = await api.post("/otp/send/", { channel: otpChannel, target, purpose: "registration" });
  setOtpSent(true);
- setOtpVerified(false);
  setOtpCode("");
  toast({ title: "OTP sent", description: response.data?.otp ? `Use OTP: ${response.data.otp}` : `Check your ${otpChannel}/console for OTP.` });
  } catch (err: any) {
@@ -79,11 +78,9 @@ const GovernmentRegister = () => {
  purpose: "registration",
  code: otpCode.trim(),
  });
- setOtpVerified(true);
  setOtpVerifiedTargets((prev) => ({ ...prev, [otpChannel]: otpChannel === "email" ? normalizeEmail(formData.email) : formData.phone.trim() }));
  toast({ title: "OTP verified", description: `${otpChannel === "email" ? "Email" : "Phone"} verified successfully.` });
  } catch (err: any) {
- setOtpVerified(false);
  setError(err?.response?.data?.error || "Invalid OTP.");
  } finally {
  setIsVerifyingOtp(false);
@@ -153,11 +150,11 @@ const GovernmentRegister = () => {
  <Button type="button" size="sm" variant={otpChannel === "phone" ? "default" : "outline"} onClick={() => setOtpChannel("phone")}>Phone OTP</Button>
  </div>
  <div className="flex flex-col gap-2 sm:flex-row">
- <Input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="Enter OTP" disabled={!otpSent || otpVerified} />
+ <Input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="Enter OTP" disabled={!otpSent || isCurrentChannelVerified} />
  <Button type="button" variant="outline" onClick={handleSendOtp} disabled={isSendingOtp || (otpChannel === "email" ? !formData.email : !formData.phone)}>{isSendingOtp ? "Sending..." : otpSent ? "Resend OTP" : "Send OTP"}</Button>
- <Button type="button" onClick={handleVerifyOtp} disabled={isVerifyingOtp || !otpSent || otpVerified}>{isVerifyingOtp ? "Verifying..." : otpVerified ? "Verified" : "Verify"}</Button>
+ <Button type="button" onClick={handleVerifyOtp} disabled={isVerifyingOtp || !otpSent || isCurrentChannelVerified}>{isVerifyingOtp ? "Verifying..." : isCurrentChannelVerified ? "Verified" : "Verify"}</Button>
  </div>
- {otpVerified && <p className="text-xs text-green-600">{otpChannel === "email" ? "Email" : "Phone"} OTP verified.</p>}
+ {isCurrentChannelVerified && <p className="text-xs text-green-600">{otpChannel === "email" ? "Email" : "Phone"} OTP verified.</p>}
  <p className="text-xs text-gray-600">Email verified: {otpVerifiedTargets.email ? "Yes" : "No"} | Phone verified: {otpVerifiedTargets.phone ? "Yes" : "No"}</p>
  </div>
  <div><Label>Authority Name</Label><Input name="authority_name" value={formData.authority_name} onChange={handleInputChange} /></div>
