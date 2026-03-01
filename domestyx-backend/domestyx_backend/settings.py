@@ -200,8 +200,6 @@ TWILIO_FROM_NUMBER = os.environ.get("TWILIO_FROM_NUMBER", "").strip()
 if IS_PRODUCTION:
     required_prod_settings = [
         ("SECRET_KEY", SECRET_KEY),
-        ("EMAIL_HOST_USER", EMAIL_HOST_USER),
-        ("EMAIL_HOST_PASSWORD", EMAIL_HOST_PASSWORD),
     ]
     missing = [key for key, value in required_prod_settings if not value or "change-me" in value]
     if missing:
@@ -209,3 +207,27 @@ if IS_PRODUCTION:
             f"Missing required production settings: {', '.join(missing)}. "
             "Set them in environment variables."
         )
+
+    if EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
+        raise RuntimeError("EMAIL_BACKEND cannot use console backend in production.")
+
+    if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+        required_smtp_settings = [
+            ("EMAIL_HOST", EMAIL_HOST),
+            ("EMAIL_HOST_USER", EMAIL_HOST_USER),
+            ("EMAIL_HOST_PASSWORD", EMAIL_HOST_PASSWORD),
+            ("DEFAULT_FROM_EMAIL", DEFAULT_FROM_EMAIL),
+        ]
+        missing_smtp = [key for key, value in required_smtp_settings if not value]
+        if missing_smtp:
+            raise RuntimeError(
+                f"Missing required SMTP settings in production: {', '.join(missing_smtp)}."
+            )
+
+        if EMAIL_PORT <= 0:
+            raise RuntimeError("EMAIL_PORT must be a positive integer in production.")
+
+        if EMAIL_USE_TLS and EMAIL_USE_SSL:
+            raise RuntimeError("EMAIL_USE_TLS and EMAIL_USE_SSL cannot both be True.")
+        if not EMAIL_USE_TLS and not EMAIL_USE_SSL:
+            raise RuntimeError("Set either EMAIL_USE_TLS=True or EMAIL_USE_SSL=True for SMTP in production.")
