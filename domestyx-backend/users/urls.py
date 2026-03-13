@@ -6,7 +6,7 @@ from .views import (
     update_compliance_report, support_provider_profile, support_service_requests,
     update_support_service_request, government_analytics, government_profile,
     public_workers, deactivate_account, delete_account, support_service_messages, support_providers,
-    update_agency_worker_submission,
+    update_agency_worker_submission, government_user_directory,
 )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -40,6 +40,7 @@ urlpatterns = [
     path("reports/compliance/", compliance_reports, name="compliance-reports"),
     path("reports/compliance/<int:report_id>/", update_compliance_report, name="update-compliance-report"),
     path("reports/analytics/", government_analytics, name="government-analytics"),
+    path("government/users/", government_user_directory, name="government-user-directory"),
     path("support/profile/", support_provider_profile, name="support-profile"),
     path("support/providers/", support_providers, name="support-providers"),
     path("support/requests/", support_service_requests, name="support-requests"),

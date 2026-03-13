@@ -63,6 +63,7 @@ import BrowseJobs from "./pages/BrowseJobs";
 import SupportServices from "./pages/SupportServices";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import SiteHeader from "@/components/SiteHeader";
 
 const queryClient = new QueryClient();
 
@@ -73,104 +74,107 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/browse-workers" element={<BrowseWorkers />} />
-            <Route path="/browse-jobs" element={<BrowseJobs />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            
-            {/* Auth Routes */}
-            <Route path="/worker/login" element={<WorkerLogin />} />
-            <Route path="/worker/register" element={<WorkerRegister />} />
-            <Route path="/employer/login" element={<EmployerLogin />} />
-            <Route path="/employer/register" element={<EmployerRegister />} />
-            <Route path="/agency/login" element={<AgencyLogin />} />
-            <Route path="/agency/register" element={<AgencyRegister />} />
-            <Route path="/government/login" element={<GovernmentLogin />} />
-            <Route path="/government/register" element={<GovernmentRegister />} />
-            <Route path="/support-provider/login" element={<SupportProviderLogin />} />
-            <Route path="/support-provider/register" element={<SupportProviderRegister />} />
+          <SiteHeader />
+          <div className="app-shell">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/browse-workers" element={<BrowseWorkers />} />
+              <Route path="/browse-jobs" element={<BrowseJobs />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
 
-            {/* Worker Area */}
-            <Route
-              path="/worker/dashboard"
-              element={
-                <ProtectedRoute allowedRole="worker">
-                  <WorkerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/worker/profile"
-              element={
-                <ProtectedRoute allowedRole="worker">
-                  <WorkerProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/worker/support-services"
-              element={
-                <ProtectedRoute allowedRole="worker">
-                  <SupportServices />
-                </ProtectedRoute>
-              }
-            />
+              {/* Auth Routes */}
+              <Route path="/worker/login" element={<WorkerLogin />} />
+              <Route path="/worker/register" element={<WorkerRegister />} />
+              <Route path="/employer/login" element={<EmployerLogin />} />
+              <Route path="/employer/register" element={<EmployerRegister />} />
+              <Route path="/agency/login" element={<AgencyLogin />} />
+              <Route path="/agency/register" element={<AgencyRegister />} />
+              <Route path="/government/login" element={<GovernmentLogin />} />
+              <Route path="/government/register" element={<GovernmentRegister />} />
+              <Route path="/support-provider/login" element={<SupportProviderLogin />} />
+              <Route path="/support-provider/register" element={<SupportProviderRegister />} />
 
-            {/* Employer Area */}
-            <Route
-              path="/employer/dashboard"
-              element={
-                <ProtectedRoute allowedRole="employer">
-                  <EmployerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/employer/post-job"
-              element={
-                <ProtectedRoute allowedRole="employer">
-                  <PostJob />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/employer/support-services"
-              element={
-                <ProtectedRoute allowedRole="employer">
-                  <SupportServices />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/agency/dashboard"
-              element={
-                <ProtectedRoute allowedRole="agency">
-                  <AgencyDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/government/dashboard"
-              element={
-                <ProtectedRoute allowedRole="government">
-                  <GovernmentDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/support-provider/dashboard"
-              element={
-                <ProtectedRoute allowedRole="support_provider">
-                  <SupportProviderDashboard />
-                </ProtectedRoute>
-              }
-            />
+              {/* Worker Area */}
+              <Route
+                path="/worker/dashboard"
+                element={
+                  <ProtectedRoute allowedRole="worker">
+                    <WorkerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/worker/profile"
+                element={
+                  <ProtectedRoute allowedRole="worker">
+                    <WorkerProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/worker/support-services"
+                element={
+                  <ProtectedRoute allowedRole="worker">
+                    <SupportServices />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="/not-found" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/not-found" replace />} />
-          </Routes>
+              {/* Employer Area */}
+              <Route
+                path="/employer/dashboard"
+                element={
+                  <ProtectedRoute allowedRole="employer">
+                    <EmployerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/employer/post-job"
+                element={
+                  <ProtectedRoute allowedRole="employer">
+                    <PostJob />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/employer/support-services"
+                element={
+                  <ProtectedRoute allowedRole="employer">
+                    <SupportServices />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/agency/dashboard"
+                element={
+                  <ProtectedRoute allowedRole="agency">
+                    <AgencyDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/government/dashboard"
+                element={
+                  <ProtectedRoute allowedRole="government">
+                    <GovernmentDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/support-provider/dashboard"
+                element={
+                  <ProtectedRoute allowedRole="support_provider">
+                    <SupportProviderDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="/not-found" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/not-found" replace />} />
+            </Routes>
+          </div>
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>

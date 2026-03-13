@@ -726,6 +726,39 @@ def government_analytics(request):
     )
 
 
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def government_user_directory(request):
+    if _user_role(request.user) != "government":
+        return Response({"message": "Only government users can access analytics."}, status=status.HTTP_403_FORBIDDEN)
+
+    def _format_user(user):
+        full_name = " ".join(filter(None, [user.get("first_name"), user.get("last_name")])).strip()
+        return {
+            "id": user.get("id"),
+            "name": full_name or user.get("email"),
+            "email": user.get("email"),
+        }
+
+    workers = list(
+        User.objects.filter(role="worker", is_active=True)
+        .order_by("-date_joined")
+        .values("id", "first_name", "last_name", "email")[:20]
+    )
+    employers = list(
+        User.objects.filter(role="employer", is_active=True)
+        .order_by("-date_joined")
+        .values("id", "first_name", "last_name", "email")[:20]
+    )
+
+    return Response(
+        {
+            "workers": [_format_user(user) for user in workers],
+            "employers": [_format_user(user) for user in employers],
+        }
+    )
+
+
 @api_view(["GET", "PUT"])
 @permission_classes([permissions.IsAuthenticated])
 @parser_classes([JSONParser, MultiPartParser, FormParser])

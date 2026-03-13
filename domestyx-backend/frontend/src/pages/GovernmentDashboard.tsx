@@ -14,23 +14,26 @@ const GovernmentDashboard = () => {
  const [reports, setReports] = useState<any[]>([]);
  const [jobReviews, setJobReviews] = useState<any[]>([]);
  const [analytics, setAnalytics] = useState<any>(null);
+ const [governmentUsers, setGovernmentUsers] = useState<{ workers: any[]; employers: any[] }>({ workers: [], employers: [] });
  const [profile, setProfile] = useState<any>({ authority_name: "", credential_reference: "", verification_document: "" });
  const [resolutionNotes, setResolutionNotes] = useState<Record<number, string>>({});
  const [jobReviewNotes, setJobReviewNotes] = useState<Record<number, string>>({});
 
  const load = async () => {
- try {
- const [reportsRes, analyticsRes, profileRes] = await Promise.all([
- api.get("/reports/compliance/"),
- api.get("/reports/analytics/"),
- api.get("/government/profile/"),
- ]);
- setReports(reportsRes.data || []);
- setAnalytics(analyticsRes.data || null);
- setProfile(profileRes.data || { authority_name: "", credential_reference: "", verification_document: "" });
- const jobsRes = await api.get("/reports/job-reviews/", { params: { status: "pending" } });
- setJobReviews(jobsRes.data || []);
- } catch {
+    try {
+      const [reportsRes, analyticsRes, profileRes] = await Promise.all([
+        api.get("/reports/compliance/"),
+        api.get("/reports/analytics/"),
+        api.get("/government/profile/"),
+      ]);
+      setReports(reportsRes.data || []);
+      setAnalytics(analyticsRes.data || null);
+      setProfile(profileRes.data || { authority_name: "", credential_reference: "", verification_document: "" });
+      const jobsRes = await api.get("/reports/job-reviews/", { params: { status: "pending" } });
+      setJobReviews(jobsRes.data || []);
+      const usersRes = await api.get("/government/users/");
+      setGovernmentUsers(usersRes.data || { workers: [], employers: [] });
+    } catch {
  toast({ title: "Error", description: "Unable to load regulatory data.", variant: "destructive" });
  }
  };
@@ -94,9 +97,9 @@ const GovernmentDashboard = () => {
  </div>
  </header>
 
- <main className="max-w-7xl mx-auto px-4 space-y-6 py-6">
- <Card className="shadow-lg border-0 bg-white">
- <CardHeader><CardTitle>Government Verification Profile</CardTitle></CardHeader>
+<main className="max-w-7xl mx-auto px-4 space-y-6 py-6">
+<Card className="shadow-lg border-0 bg-white">
+<CardHeader><CardTitle>Government Verification Profile</CardTitle></CardHeader>
  <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
  <div className="space-y-1">
  <Label>Authority Name</Label>
@@ -123,20 +126,64 @@ const GovernmentDashboard = () => {
  <div className="md:col-span-3">
  <Button onClick={() => void saveGovernmentProfile()}>Save Profile</Button>
  </div>
- </CardContent>
- </Card>
+</CardContent>
+</Card>
 
- <Card className="shadow-lg border-0 bg-white">
- <CardHeader><CardTitle>Platform Analytics</CardTitle></CardHeader>
- <CardContent className="grid grid-cols-2 gap-3 md:grid-cols-4">
- <div className="rounded-lg border p-3"><p className="text-xs text-gray-500">Jobs</p><p className="text-xl font-bold">{analytics?.totals?.jobs || 0}</p></div>
- <div className="rounded-lg border p-3"><p className="text-xs text-gray-500">Applications</p><p className="text-xl font-bold">{analytics?.totals?.applications || 0}</p></div>
- <div className="rounded-lg border p-3"><p className="text-xs text-gray-500">Hired</p><p className="text-xl font-bold">{analytics?.totals?.hired || 0}</p></div>
- <div className="rounded-lg border p-3"><p className="text-xs text-gray-500">Open Reports</p><p className="text-xl font-bold">{analytics?.totals?.compliance_reports_open || 0}</p></div>
- </CardContent>
- </Card>
+<Card className="shadow-lg border-0 bg-white">
+<CardHeader><CardTitle>Platform Analytics</CardTitle></CardHeader>
+<CardContent className="grid grid-cols-2 gap-3 md:grid-cols-4">
+  <div className="rounded-lg border p-3"><p className="text-xs text-gray-500">Jobs</p><p className="text-xl font-bold">{analytics?.totals?.jobs || 0}</p></div>
+  <div className="rounded-lg border p-3"><p className="text-xs text-gray-500">Applications</p><p className="text-xl font-bold">{analytics?.totals?.applications || 0}</p></div>
+  <div className="rounded-lg border p-3"><p className="text-xs text-gray-500">Hired</p><p className="text-xl font-bold">{analytics?.totals?.hired || 0}</p></div>
+  <div className="rounded-lg border p-3"><p className="text-xs text-gray-500">Open Reports</p><p className="text-xl font-bold">{analytics?.totals?.compliance_reports_open || 0}</p></div>
+</CardContent>
+</Card>
 
- <Card className="shadow-lg border-0 bg-white">
+<Card className="shadow-lg border-0 bg-white">
+  <CardHeader><CardTitle>Active Workforce Snapshot</CardTitle></CardHeader>
+  <CardContent>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="rounded-lg border p-4 bg-slate-50">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">Workers</p>
+          <p className="text-lg font-semibold">{analytics?.totals?.users?.worker ?? governmentUsers.workers.length}</p>
+        </div>
+        <div className="mt-3 space-y-2 max-h-48 overflow-y-auto pr-2">
+          {governmentUsers.workers.length === 0 ? (
+            <p className="text-xs text-gray-500">No workers available.</p>
+          ) : (
+            governmentUsers.workers.map((w) => (
+              <div key={w.id} className="rounded-md bg-white/80 px-3 py-2">
+                <p className="text-sm font-medium text-app-text">{w.name}</p>
+                <p className="text-xs text-gray-500">{w.email}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      <div className="rounded-lg border p-4 bg-slate-50">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">Employers</p>
+          <p className="text-lg font-semibold">{analytics?.totals?.users?.employer ?? governmentUsers.employers.length}</p>
+        </div>
+        <div className="mt-3 space-y-2 max-h-48 overflow-y-auto pr-2">
+          {governmentUsers.employers.length === 0 ? (
+            <p className="text-xs text-gray-500">No employers available.</p>
+          ) : (
+            governmentUsers.employers.map((e) => (
+              <div key={e.id} className="rounded-md bg-white/80 px-3 py-2">
+                <p className="text-sm font-medium text-app-text">{e.name}</p>
+                <p className="text-xs text-gray-500">{e.email}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
+<Card className="shadow-lg border-0 bg-white">
  <CardHeader><CardTitle>Pending Job Reviews</CardTitle></CardHeader>
  <CardContent className="space-y-3">
  {jobReviews.length === 0 ? (

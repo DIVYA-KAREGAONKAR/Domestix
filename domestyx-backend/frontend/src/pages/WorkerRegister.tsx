@@ -17,6 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { registerUser, loginUser } from "@/services/authService";
 import api from "@/services/api";
 import { normalizeRole, roleDashboardPath } from "@/lib/roles";
+import { useOtpTimer } from "@/hooks/use-otp-timer";
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const WorkerRegister = () => {
@@ -36,13 +37,14 @@ const WorkerRegister = () => {
  const [isLoading, setIsLoading] = useState(false);
  const [isSendingOtp, setIsSendingOtp] = useState(false);
  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
- const [error, setError] = useState("");
- const [otpCode, setOtpCode] = useState("");
- const [otpSent, setOtpSent] = useState(false);
- const [otpVerifiedTargets, setOtpVerifiedTargets] = useState<{ email: string; phone: string }>({ email: "", phone: "" });
+  const [error, setError] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerifiedTargets, setOtpVerifiedTargets] = useState<{ email: string; phone: string }>({ email: "", phone: "" });
  const [otpChannel, setOtpChannel] = useState<"email" | "phone">("email");
  const currentOtpTarget = otpChannel === "email" ? normalizeEmail(formData.email) : formData.phone.trim();
  const isCurrentChannelVerified = currentOtpTarget !== "" && (otpChannel === "email" ? otpVerifiedTargets.email === currentOtpTarget : otpVerifiedTargets.phone === currentOtpTarget);
+ const otpTimer = useOtpTimer();
  const { login } = useAuth();
  const navigate = useNavigate();
 
@@ -67,23 +69,24 @@ const WorkerRegister = () => {
  setError(`Enter ${otpChannel} first to receive OTP.`);
  return;
  }
- setError("");
- setIsSendingOtp(true);
- try {
- const response = await api.post("/otp/send/", {
- channel: otpChannel,
- target,
- purpose: "registration",
- });
- setOtpSent(true);
- setOtpCode("");
- toast({
- title: "OTP sent",
- description: response.data?.otp
- ? `Use OTP: ${response.data.otp}`
- : `Check your ${otpChannel}/console for OTP.`,
- });
- } catch (err: any) {
+  setError("");
+  setIsSendingOtp(true);
+  try {
+    const response = await api.post("/otp/send/", {
+      channel: otpChannel,
+      target,
+      purpose: "registration",
+    });
+    setOtpSent(true);
+    setOtpCode("");
+    otpTimer.start();
+    toast({
+      title: "OTP sent",
+      description: response.data?.otp
+        ? `Use OTP: ${response.data.otp}`
+        : `Check your ${otpChannel}/console for OTP.`,
+    });
+  } catch (err: any) {
  setError(err?.response?.data?.error || "Failed to send OTP.");
  } finally {
  setIsSendingOtp(false);
@@ -266,8 +269,11 @@ const WorkerRegister = () => {
  {isVerifyingOtp ? "Verifying..." : isCurrentChannelVerified ? "Verified" : "Verify"}
  </Button>
  </div>
- {isCurrentChannelVerified && <p className="text-xs text-green-600">{otpChannel === "email" ? "Email" : "Phone"} OTP verified.</p>}
- <p className="text-xs text-gray-600">Email verified: {otpVerifiedTargets.email ? "Yes" : "No"} | Phone verified: {otpVerifiedTargets.phone ? "Yes" : "No"}</p>
+            {isCurrentChannelVerified && <p className="text-xs text-green-600">{otpChannel === "email" ? "Email" : "Phone"} OTP verified.</p>}
+            <p className={`text-xs ${otpTimer.isRunning ? "text-slate-600" : "text-amber-600"}`}>
+              {otpTimer.isRunning ? `OTP valid for ${otpTimer.formattedTime}` : "OTP expired or not requested."}
+            </p>
+            <p className="text-xs text-gray-600">Email verified: {otpVerifiedTargets.email ? "Yes" : "No"} | Phone verified: {otpVerifiedTargets.phone ? "Yes" : "No"}</p>
  </div>
 
             <div className="responsive-grid">
