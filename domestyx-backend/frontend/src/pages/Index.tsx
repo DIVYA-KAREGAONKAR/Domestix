@@ -195,40 +195,13 @@ const Index = () => {
       </section>
      </main>
 
-   <footer className="bg-gray-800 text-white py-6">
-     <div className="section-shell text-center">
-       <p>&copy; 2024 DomestyX. All rights reserved.</p>
-        <div className="supported-by-badge">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="1.5" opacity="0.9" />
-            <path
-              d="M7 13.5h3a1.5 1.5 0 0 0 0-3h-2.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-            <path
-              d="M13 10v5a1.5 1.5 0 0 0 1.5 1.5H16"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-          <span>
-            Supported by <strong>FasterCapital</strong>
-          </span>
-        </div>
-     </div>
-   </footer>
-  </div>
+     <footer className="bg-gray-800 text-white py-6">
+       <div className="section-shell text-center">
+         <p>&copy; 2024 DomestyX. All rights reserved.</p>
+         <p className="supported-by-caption">Supported by FasterCapital</p>
+       </div>
+    </footer>
+   </div>
 );
 };
 
