@@ -74,7 +74,7 @@ const Index = () => {
      <main className="space-y-12 py-12">
       <section className="md:hidden bg-gradient-to-br from-slate-50 via-white to-white">
         <div className="section-shell">
-          <div className="rounded-3xl bg-white/85 p-6 shadow-md shadow-slate-200">
+          <div className="rounded-3xl bg-white/90 p-6 shadow-md shadow-slate-200 text-center">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Premium Domestic Help</p>
             <h2 className="text-2xl font-bold text-app-text mt-4">
               Connect with Trusted <span className="text-primary">Domestic Workers</span>
@@ -83,14 +83,14 @@ const Index = () => {
               DomestyX bridges the gap between skilled domestic workers and families who need reliable help.
               Find verified professionals or showcase your services with ease.
             </p>
-            <div className="flex flex-wrap gap-3 mt-6">
-              <Link to="/worker/register">
-                <Button size="lg" className="btn-primary px-6 py-3 text-base tracking-wide">
+            <div className="flex flex-col items-center gap-3 mt-6">
+              <Link to="/worker/register" className="w-full max-w-xs">
+                <Button size="lg" className="w-full btn-primary px-6 py-3 text-base tracking-wide">
                   I'm a Worker
                 </Button>
               </Link>
-              <Link to="/employer/register">
-                <Button size="lg" variant="outline" className="px-6 py-3 text-base border-primary text-primary hover:bg-primary hover:text-white">
+              <Link to="/employer/register" className="w-full max-w-xs">
+                <Button size="lg" variant="outline" className="w-full px-6 py-3 text-base border-primary text-primary hover:bg-primary hover:text-white">
                   I'm an Employer
                 </Button>
               </Link>
