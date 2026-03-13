@@ -53,7 +53,7 @@ const Index = () => {
     </div>
   </header>
 
-     <main className="space-y-12 py-12">
+     <main className="space-y-12 pt-12 pb-0">
       <section className="md:hidden bg-gradient-to-br from-slate-50 via-white to-white">
         <div className="section-shell">
           <div className="rounded-3xl bg-white/85 p-6 shadow-md shadow-slate-200 text-center">
@@ -171,37 +171,14 @@ const Index = () => {
          </div>
        </section>
 
-      <section className="md:hidden bg-gradient-to-r from-slate-900 to-slate-800 text-white">
-        <div className="section-shell py-12">
-          <div className="text-center space-y-5">
-            <h3 className="text-2xl font-bold">Ready to Get Started?</h3>
-            <p className="text-base text-slate-200 mx-auto max-w-2xl">
-              Join thousands of families and workers trusting DomestyX to streamline domestic hiring.
-            </p>
-            <div className="flex flex-wrap justify-center gap-5">
-              <Link to="/worker/register">
-                <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 px-7 py-3 text-base">
-                  Register as Worker
-                </Button>
-              </Link>
-              <Link to="/employer/register">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20 px-7 py-3 text-base">
-                  Find Workers
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="hidden md:block bg-primary text-white">
-        <div className="section-shell text-center py-16">
+      <section className="bg-primary text-white">
+        <div className="section-shell text-center pt-14 pb-20 md:pt-18 md:pb-24">
           <div className="max-w-5xl mx-auto space-y-6">
             <h3 className="text-3xl font-bold">Ready to Get Started?</h3>
             <p className="text-xl opacity-90">
-              Join thousands of satisfied users who have found their perfect match.
+              Join thousands of families and workers trusting DomestyX to streamline domestic hiring.
             </p>
-            <div className="flex flex-row flex-wrap justify-center gap-8">
+            <div className="flex flex-row flex-wrap justify-center gap-6 md:gap-8">
               <Link to="/worker/register">
                 <Button size="lg" variant="secondary" className="px-12 py-3 text-lg">
                   Register as Worker
