@@ -1,0 +1,33 @@
+<svg width="280" height="82" viewBox="0 0 280 82" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FasterCapital logo">
+  <rect width="280" height="82" fill="none" />
+  <defs>
+    <linearGradient id="gearGradient" x1="38" y1="12" x2="38" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0079ff"/>
+      <stop offset="100%" stop-color="#0054c4"/>
+    </linearGradient>
+    <linearGradient id="dotsGradient" x1="0" y1="0" x2="0" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ff3c32"/>
+      <stop offset="100%" stop-color="#ff8c00"/>
+    </linearGradient>
+  </defs>
+  <g filter="url(#gearBlur)">
+    <circle cx="46" cy="41" r="36" fill="url(#gearGradient)" />
+  </g>
+  <circle cx="46" cy="41" r="16" fill="white" />
+  <circle cx="46" cy="41" r="10" fill="#2196f3" opacity="0.45" />
+  <path d="M58 26c4-1 9-2 12 0" stroke="#2196f3" stroke-width="4" stroke-linecap="round" />
+  <g fill="#2196f3" opacity="0.85">
+    <rect x="34" y="1" width="12" height="22" rx="5" transform="translate(24 18) rotate(-20)" />
+    <rect x="36" y="2" width="12" height="25" rx="5" transform="translate(24 18) rotate(20)" />
+    <rect x="36" y="2" width="12" height="25" rx="5" transform="translate(24 18) rotate(45)" />
+    <rect x="36" y="2" width="12" height="25" rx="5" transform="translate(24 18) rotate(-45)" />
+  </g>
+  <g fill="url(#dotsGradient)">
+    <circle cx="16" cy="38" r="3" />
+    <circle cx="22" cy="38" r="3" opacity="0.55" />
+    <circle cx="28" cy="38" r="3" opacity="0.35" />
+    <circle cx="34" cy="38" r="3" opacity="0.2" />
+  </g>
+  <text x="90" y="50" font-family="'Helvetica Neue', 'Segoe UI', sans-serif" font-size="40" font-weight="600" fill="#db1d25">Faster</text>
+  <text x="210" y="50" font-family="'Helvetica Neue', 'Segoe UI', sans-serif" font-size="40" font-weight="600" fill="#1085d6">Capital</text>
+</svg>
