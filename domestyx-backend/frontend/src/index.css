@@ -93,13 +93,15 @@
     @apply min-h-screen;
   }
 
-  .site-header {
-    @apply w-full bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 text-white shadow-lg;
+  .supported-by-badge {
+    @apply mt-3 flex items-center justify-center gap-2 text-xs text-white/70;
+    opacity: 0.8;
+    filter: grayscale(1);
   }
 
-  .site-logo {
-    height: 56px;
-    width: auto;
+  .supported-by-badge svg {
+    width: 24px;
+    height: 24px;
   }
 
   .page-wrap {
