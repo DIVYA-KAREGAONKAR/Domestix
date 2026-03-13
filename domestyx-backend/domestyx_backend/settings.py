@@ -199,6 +199,7 @@ SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "console").strip().lower()
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
 TWILIO_FROM_NUMBER = os.environ.get("TWILIO_FROM_NUMBER", "").strip()
+DEFAULT_PHONE_REGION = os.environ.get("DEFAULT_PHONE_REGION", "").strip().upper()
 
 if IS_PRODUCTION:
     required_prod_settings = [

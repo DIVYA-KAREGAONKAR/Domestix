@@ -18,6 +18,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+import phonenumbers
 
 from .serializers import (
     RegisterSerializer, ProfileSerializer,
@@ -59,6 +60,47 @@ def _mask_target(target):
     return "*" * (len(target) - 4) + target[-4:]
 
 
+def _get_default_phone_region():
+    explicit_region = (getattr(settings, "DEFAULT_PHONE_REGION", "") or "").strip().upper()
+    if explicit_region:
+        return explicit_region
+
+    twilio_number = getattr(settings, "TWILIO_FROM_NUMBER", "")
+    if twilio_number:
+        try:
+            parsed_twilio = phonenumbers.parse(twilio_number, None)
+            region = phonenumbers.region_code_for_number(parsed_twilio)
+            if region:
+                return region
+        except phonenumbers.NumberParseException:
+            logger.warning("Unable to derive default phone region from Twilio number", exc_info=True)
+    return None
+
+
+def _normalize_phone_target(target: str) -> str:
+    if not target:
+        raise ValueError("Phone number is required.")
+    normalized_region = _get_default_phone_region()
+    try:
+        parsed_number = phonenumbers.parse(target.strip(), normalized_region)
+    except phonenumbers.NumberParseException as exc:
+        raise ValueError(f"Invalid phone number: {exc}") from exc
+    if not phonenumbers.is_valid_number(parsed_number):
+        raise ValueError("Phone number is not valid.")
+    return phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164)
+
+
+def _has_verified_otp(channel: str, target: str, purpose: str = "registration") -> bool:
+    verification_window_start = timezone.now() - timedelta(seconds=settings.OTP_VERIFICATION_WINDOW_SECONDS)
+    return OTPVerification.objects.filter(
+        channel=channel,
+        target=target,
+        purpose=purpose,
+        verified_at__isnull=False,
+        verified_at__gte=verification_window_start,
+    ).exists()
+
+
 def _send_phone_otp(phone_number, code):
     provider = (getattr(settings, "SMS_PROVIDER", "console") or "console").strip().lower()
     if provider == "twilio":
@@ -80,9 +122,15 @@ def _send_phone_otp(phone_number, code):
         auth_bytes = f"{account_sid}:{auth_token}".encode("utf-8")
         import base64
         request.add_header("Authorization", f"Basic {base64.b64encode(auth_bytes).decode('ascii')}")
-        with urlopen(request, timeout=10) as response:
-            if response.status < 200 or response.status >= 300:
-                raise RuntimeError(f"Twilio send failed with status {response.status}")
+        try:
+            with urlopen(request, timeout=10) as response:
+                if response.status < 200 or response.status >= 300:
+                    raise RuntimeError(f"Twilio send failed with status {response.status}")
+        except HTTPError as exc:
+            err_body = exc.read().decode("utf-8", errors="ignore")
+            raise RuntimeError(
+                f"Twilio SMS failed with status {exc.code}. {err_body[:400]}"
+            ) from exc
         return
     if provider == "console":
         logger.info("SMS OTP (console provider) to %s -> %s", _mask_target(phone_number), code)
@@ -198,39 +246,38 @@ class RegisterView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         target_email = (request.data.get("email") or "").strip().lower()
-        target_phone = (request.data.get("phone") or "").strip()
-        if settings.OTP_REQUIRE_VERIFIED_EMAIL_ON_REGISTER:
-            verification_window_start = timezone.now() - timedelta(
-                seconds=settings.OTP_VERIFICATION_WINDOW_SECONDS
-            )
-            verified_otp_exists = OTPVerification.objects.filter(
-                channel="email",
-                target=target_email,
-                purpose="registration",
-                verified_at__isnull=False,
-                verified_at__gte=verification_window_start,
-            ).exists()
-            if not verified_otp_exists:
+        target_phone_raw = (request.data.get("phone") or "").strip()
+        requires_email_otp = settings.OTP_REQUIRE_VERIFIED_EMAIL_ON_REGISTER
+        requires_phone_otp = settings.OTP_REQUIRE_VERIFIED_PHONE_ON_REGISTER
+
+        email_verified = False
+        phone_verified = False
+        if requires_email_otp:
+            email_verified = _has_verified_otp("email", target_email, purpose="registration")
+
+        if requires_phone_otp:
+            try:
+                _normalized_phone = _normalize_phone_target(target_phone_raw)
+            except ValueError as exc:
+                return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            phone_verified = _has_verified_otp("phone", _normalized_phone, purpose="registration")
+
+        if requires_email_otp and requires_phone_otp:
+            if not (email_verified or phone_verified):
                 return Response(
-                    {"error": "Email OTP verification is required before registration."},
+                    {"error": "Verify your email or phone via OTP before registration."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        if settings.OTP_REQUIRE_VERIFIED_PHONE_ON_REGISTER:
-            verification_window_start = timezone.now() - timedelta(
-                seconds=settings.OTP_VERIFICATION_WINDOW_SECONDS
+        elif requires_email_otp and not email_verified:
+            return Response(
+                {"error": "Email OTP verification is required before registration."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            verified_phone_otp_exists = OTPVerification.objects.filter(
-                channel="phone",
-                target=target_phone,
-                purpose="registration",
-                verified_at__isnull=False,
-                verified_at__gte=verification_window_start,
-            ).exists()
-            if not verified_phone_otp_exists:
-                return Response(
-                    {"error": "Phone OTP verification is required before registration."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        elif requires_phone_otp and not phone_verified:
+            return Response(
+                {"error": "Phone OTP verification is required before registration."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -336,6 +383,11 @@ def send_otp(request):
     serializer.is_valid(raise_exception=True)
     payload = serializer.validated_data
     target = payload["target"].strip().lower() if payload["channel"] == "email" else payload["target"].strip()
+    if payload["channel"] == "phone":
+        try:
+            target = _normalize_phone_target(target)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
     now = timezone.now()
 
     latest_sent = OTPVerification.objects.filter(
