@@ -134,8 +134,10 @@ const WorkerRegister = () => {
  }
  const cleanEmail = normalizeEmail(formData.email);
  const cleanPhone = formData.phone.trim();
- if (otpVerifiedTargets.email !== cleanEmail || otpVerifiedTargets.phone !== cleanPhone) {
- setError("Please verify both Email OTP and Phone OTP before creating the account.");
+ const emailVerifiedSuccessfully = otpVerifiedTargets.email === cleanEmail;
+ const phoneVerifiedSuccessfully = otpVerifiedTargets.phone === cleanPhone;
+ if (!emailVerifiedSuccessfully && !phoneVerifiedSuccessfully) {
+ setError("Please verify either Email OTP or Phone OTP before creating the account.");
  setIsLoading(false);
  return;
  }

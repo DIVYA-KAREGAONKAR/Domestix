@@ -91,10 +91,13 @@ const SupportProviderRegister = () => {
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault();
  const cleanEmail = normalizeEmail(formData.email);
+ const cleanPhone = formData.phone.trim();
  if (formData.password !== formData.confirmPassword) return setError("Passwords do not match.");
  if (!formData.agreeToTerms) return setError("You must agree to the terms.");
- if (otpVerifiedTargets.email !== cleanEmail || otpVerifiedTargets.phone !== formData.phone.trim()) {
- return setError("Please verify both Email OTP and Phone OTP before creating the account.");
+ const emailVerifiedSuccessfully = otpVerifiedTargets.email === cleanEmail;
+ const phoneVerifiedSuccessfully = otpVerifiedTargets.phone === cleanPhone;
+ if (!emailVerifiedSuccessfully && !phoneVerifiedSuccessfully) {
+ return setError("Please verify either Email OTP or Phone OTP before creating the account.");
  }
 
  setError("");
