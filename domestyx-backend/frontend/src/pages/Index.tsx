@@ -196,7 +196,7 @@ const Index = () => {
       </section>
      </main>
 
-     <footer className="bg-gray-800 text-white py-6">
+   <footer className="bg-slate-700 text-white py-6">
        <div className="section-shell text-center">
          <p>&copy; 2024 DomestyX. All rights reserved.</p>
          <p className="supported-by-caption">
