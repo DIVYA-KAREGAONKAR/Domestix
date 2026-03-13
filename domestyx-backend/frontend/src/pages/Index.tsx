@@ -74,16 +74,15 @@ const Index = () => {
      <main className="space-y-12 py-12">
       <section className="md:hidden bg-gradient-to-br from-slate-50 via-white to-white">
         <div className="section-shell">
-          <div className="rounded-3xl bg-white/85 p-6 shadow-md shadow-slate-200">
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Premium Domestic Help</p>
+          <div className="rounded-3xl bg-white/85 p-6 shadow-md shadow-slate-200 text-center">
             <h2 className="text-2xl font-bold text-app-text mt-4">
               Connect with Trusted <span className="text-primary">Domestic Workers</span>
             </h2>
-            <p className="text-base text-slate-600 mt-3">
+            <p className="text-base text-slate-600 mt-3 text-center max-w-xl mx-auto">
               DomestyX bridges the gap between skilled domestic workers and families who need reliable help.
               Find verified professionals or showcase your services with ease.
             </p>
-            <div className="flex flex-wrap gap-3 mt-6">
+            <div className="flex flex-wrap gap-3 mt-6 justify-center">
               <Link to="/worker/register">
                 <Button size="lg" className="btn-primary px-6 py-3 text-base tracking-wide">
                   I'm a Worker
