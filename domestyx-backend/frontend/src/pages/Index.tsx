@@ -230,22 +230,24 @@ const Index = () => {
       </section>
 
       <section className="hidden md:block bg-primary text-white">
-        <div className="section-shell text-center py-12">
-          <h3 className="text-3xl font-bold mb-4">Ready to Get Started?</h3>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of satisfied users who have found their perfect match
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/worker/register">
-              <Button size="lg" variant="secondary" className="px-8 py-3 text-lg">
-                Register as Worker
-              </Button>
-            </Link>
-            <Link to="/employer/register">
-              <Button size="lg" variant="secondary" className="px-8 py-3 text-lg ">
-                Find Workers
-              </Button>
-            </Link>
+        <div className="section-shell text-center py-16">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <h3 className="text-3xl font-bold">Ready to Get Started?</h3>
+            <p className="text-xl opacity-90">
+              Join thousands of satisfied users who have found their perfect match.
+            </p>
+            <div className="flex flex-wrap gap-6 justify-center">
+              <Link to="/worker/register">
+                <Button size="lg" variant="secondary" className="px-10 py-3 text-lg">
+                  Register as Worker
+                </Button>
+              </Link>
+              <Link to="/employer/register">
+                <Button size="lg" variant="secondary" className="px-10 py-3 text-lg">
+                  Find Workers
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
