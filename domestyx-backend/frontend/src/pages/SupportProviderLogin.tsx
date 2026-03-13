@@ -15,6 +15,10 @@ const SupportProviderLogin = () => {
  const [password, setPassword] = useState("");
  const [isLoading, setIsLoading] = useState(false);
  const [error, setError] = useState("");
+ const resetForm = () => {
+   setEmail("");
+   setPassword("");
+ };
  const { login } = useAuth();
  const navigate = useNavigate();
 
@@ -26,15 +30,18 @@ const SupportProviderLogin = () => {
  const data = await loginUser(email.trim().toLowerCase(), password);
  const role = normalizeRole(data?.user?.role);
  if (role !== "support_provider") {
- setError("This account is not registered as support service provider.");
- return;
+  setError("This account is not registered as support service provider.");
+  resetForm();
+  return;
  }
  login(data.access, { ...data.user, role });
  toast({ title: "Login Successful", description: "Welcome back." });
  navigate("/support-provider/dashboard", { replace: true });
  } catch (err: any) {
- setError(err?.response?.data?.detail || "Invalid email or password.");
- } finally {
+  const message = err?.response?.data?.detail || "Invalid email or password.";
+  setError(message);
+  resetForm();
+} finally {
  setIsLoading(false);
  }
  };

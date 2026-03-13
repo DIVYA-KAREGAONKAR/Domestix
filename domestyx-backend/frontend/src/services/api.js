@@ -28,6 +28,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      const isAuthEndpoint = error.config?.url?.includes('/token/');
       let loginPath = '/worker/login';
       try {
         const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
@@ -37,7 +38,10 @@ api.interceptors.response.use(
       }
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
-      window.location.href = loginPath;
+      delete api.defaults.headers.common['Authorization'];
+      if (!isAuthEndpoint) {
+        window.location.href = loginPath;
+      }
     }
     return Promise.reject(error);
   }

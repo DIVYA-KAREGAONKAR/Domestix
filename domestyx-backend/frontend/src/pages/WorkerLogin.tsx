@@ -22,6 +22,10 @@ const WorkerLogin = () => {
  const [password, setPassword] = useState("");
  const [isLoading, setIsLoading] = useState(false);
  const [error, setError] = useState("");
+ const resetForm = () => {
+   setEmail("");
+   setPassword("");
+ };
 
  const { login } = useAuth();
  const navigate = useNavigate();
@@ -37,16 +41,19 @@ const WorkerLogin = () => {
  const userRole = normalizeRole(data?.user?.role);
 
  if (userRole !== "worker") {
- setError("This account is registered as an employer. Please use Employer Login.");
- return;
+  setError("This account is registered as an employer. Please use Employer Login.");
+  resetForm();
+  return;
  }
 
  login(data.access, { ...data.user, role: userRole });
  toast({ title: "Login Successful", description: "Welcome back." });
  navigate("/worker/dashboard", { replace: true });
  } catch (err: any) {
- setError(err.response?.data?.detail || "Invalid email or password.");
- } finally {
+  const message = err.response?.data?.detail || "Invalid email or password.";
+  setError(message);
+  resetForm();
+} finally {
  setIsLoading(false);
  }
  };
