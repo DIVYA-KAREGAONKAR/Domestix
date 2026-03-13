@@ -140,7 +140,7 @@ const SupportProviderRegister = () => {
  <CardContent>
  <form className="space-y-4" onSubmit={handleSubmit}>
  {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
- <div className="grid grid-cols-2 gap-3">
+          <div className="responsive-grid">
  <div><Label>First Name</Label><Input name="first_name" value={formData.first_name} onChange={handleInputChange} required /></div>
  <div><Label>Last Name</Label><Input name="last_name" value={formData.last_name} onChange={handleInputChange} required /></div>
  </div>

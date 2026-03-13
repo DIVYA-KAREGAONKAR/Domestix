@@ -224,7 +224,7 @@ const WorkerRegister = () => {
  </Alert>
  )}
 
- <div className="grid grid-cols-2 gap-4">
+            <div className="responsive-grid">
  <div>
  <Label htmlFor="first_name">First Name</Label>
  <Input id="first_name" name="first_name" required value={formData.first_name} onChange={handleInputChange} placeholder="John" />
@@ -268,7 +268,7 @@ const WorkerRegister = () => {
  <p className="text-xs text-gray-600">Email verified: {otpVerifiedTargets.email ? "Yes" : "No"} | Phone verified: {otpVerifiedTargets.phone ? "Yes" : "No"}</p>
  </div>
 
- <div className="grid grid-cols-2 gap-4">
+            <div className="responsive-grid">
  <div>
  <Label htmlFor="nationality">Nationality</Label>
  <Input id="nationality" name="nationality" value={formData.nationality} onChange={handleInputChange} placeholder="Indian, Nepali, Filipino" />

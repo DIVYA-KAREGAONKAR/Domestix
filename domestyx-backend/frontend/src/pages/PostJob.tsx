@@ -151,7 +151,7 @@ const PostJob = () => {
  <Label htmlFor="description">Description</Label>
  <Textarea id="description" name="description" value={jobData.description} onChange={handleInputChange} required />
  </div>
- <div className="grid grid-cols-2 gap-4">
+          <div className="responsive-grid">
  <div>
  <Label>Job Type</Label>
  <Select onValueChange={(v) => setJobData(p => ({ ...p, jobType: v }))}>

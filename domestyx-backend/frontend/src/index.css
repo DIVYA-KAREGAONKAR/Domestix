@@ -109,7 +109,33 @@
     @apply bg-accent text-accent-foreground hover:bg-accent/90 transition-colors duration-200;
   }
 
-  .btn-success {
+.btn-success {
     @apply bg-success text-success-foreground hover:bg-success/90 transition-colors duration-200;
+  }
+}
+
+@layer utilities {
+  .responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  .stacked-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    .stacked-header {
+      flex-direction: row;
+    }
+  }
+
+  .section-shell {
+    width: min(100%, 1200px);
+    margin: 0 auto;
+    padding: 0 1rem;
   }
 }
