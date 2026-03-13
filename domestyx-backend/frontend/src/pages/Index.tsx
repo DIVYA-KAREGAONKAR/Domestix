@@ -172,8 +172,8 @@ const Index = () => {
        </section>
 
       <section className="bg-primary text-white">
-        <div className="section-shell text-center pt-14 pb-20 md:pt-18 md:pb-24">
-          <div className="max-w-5xl mx-auto space-y-6">
+        <div className="section-shell min-h-[340px] md:min-h-[380px] flex flex-col justify-center px-4 py-10 md:py-14">
+          <div className="w-full text-center space-y-6">
             <h3 className="text-3xl font-bold">Ready to Get Started?</h3>
             <p className="text-xl opacity-90">
               Join thousands of families and workers trusting DomestyX to streamline domestic hiring.
