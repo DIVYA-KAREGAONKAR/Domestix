@@ -207,20 +207,20 @@ const Index = () => {
        </section>
 
       <section className="md:hidden bg-gradient-to-r from-slate-900 to-slate-800 text-white">
-        <div className="section-shell py-10">
-          <div className="space-y-4">
+        <div className="section-shell py-12">
+          <div className="text-center space-y-5">
             <h3 className="text-2xl font-bold">Ready to Get Started?</h3>
-            <p className="text-base text-slate-200 max-w-2xl">
+            <p className="text-base text-slate-200 mx-auto max-w-2xl">
               Join thousands of families and workers trusting DomestyX to streamline domestic hiring.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap justify-center gap-5">
               <Link to="/worker/register">
-                <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 px-6 py-3 text-base">
+                <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 px-7 py-3 text-base">
                   Register as Worker
                 </Button>
               </Link>
               <Link to="/employer/register">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20 px-6 py-3 text-base">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20 px-7 py-3 text-base">
                   Find Workers
                 </Button>
               </Link>
@@ -230,20 +230,20 @@ const Index = () => {
       </section>
 
       <section className="hidden md:block bg-primary text-white">
-        <div className="section-shell text-center py-16">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="section-shell text-center py-18">
+          <div className="max-w-5xl mx-auto space-y-6">
             <h3 className="text-3xl font-bold">Ready to Get Started?</h3>
             <p className="text-xl opacity-90">
               Join thousands of satisfied users who have found their perfect match.
             </p>
-            <div className="flex flex-wrap gap-6 justify-center">
+            <div className="flex flex-row flex-wrap justify-center gap-8">
               <Link to="/worker/register">
-                <Button size="lg" variant="secondary" className="px-10 py-3 text-lg">
+                <Button size="lg" variant="secondary" className="px-12 py-3 text-lg">
                   Register as Worker
                 </Button>
               </Link>
               <Link to="/employer/register">
-                <Button size="lg" variant="secondary" className="px-10 py-3 text-lg">
+                <Button size="lg" variant="secondary" className="px-12 py-3 text-lg">
                   Find Workers
                 </Button>
               </Link>
