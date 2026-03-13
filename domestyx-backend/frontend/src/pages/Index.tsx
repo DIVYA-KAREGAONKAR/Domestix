@@ -26,34 +26,32 @@ const Index = () => {
         </div>
       </div>
     </header>
-    <header className="md:hidden bg-white shadow-sm border-b">
-      <div className="section-shell">
-          <div className="flex flex-col gap-3 py-4">
-            <div className="flex items-center justify-between">
-              <Link to="/" className="text-2xl font-bold text-primary">
-                DomestyX
-              </Link>
-            </div>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-              <Link to="/agency/login">
-                <Button size="xs" variant="outline" className="px-4 py-1">
-                  Agency
-                </Button>
-              </Link>
-              <Link to="/government/login">
-                <Button size="xs" variant="outline" className="px-4 py-1">
-                  Government
-                </Button>
-              </Link>
-              <Link to="/support-provider/login">
-                <Button size="xs" variant="outline" className="px-4 py-1">
-                  Support
-                </Button>
-              </Link>
-            </div>
-          </div>
+  <header className="md:hidden bg-white shadow-sm border-b">
+    <div className="section-shell">
+      <div className="flex items-center justify-between gap-3 py-4">
+        <Link to="/" className="text-2xl font-bold text-primary">
+          DomestyX
+        </Link>
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <Link to="/agency/login">
+            <Button size="xs" variant="outline" className="px-4 py-1 whitespace-nowrap">
+              Agency
+            </Button>
+          </Link>
+          <Link to="/government/login">
+            <Button size="xs" variant="outline" className="px-4 py-1 whitespace-nowrap">
+              Government
+            </Button>
+          </Link>
+          <Link to="/support-provider/login">
+            <Button size="xs" variant="outline" className="px-4 py-1 whitespace-nowrap">
+              Support
+            </Button>
+          </Link>
+        </div>
       </div>
-    </header>
+    </div>
+  </header>
 
      <main className="space-y-12 py-12">
       <section className="md:hidden bg-gradient-to-br from-slate-50 via-white to-white">
@@ -197,7 +195,7 @@ const Index = () => {
       </section>
 
       <section className="hidden md:block bg-primary text-white">
-        <div className="section-shell text-center py-18">
+        <div className="section-shell text-center py-16">
           <div className="max-w-5xl mx-auto space-y-6">
             <h3 className="text-3xl font-bold">Ready to Get Started?</h3>
             <p className="text-xl opacity-90">
@@ -220,7 +218,7 @@ const Index = () => {
       </section>
      </main>
 
-     <footer className="bg-gray-800 text-white py-8">
+     <footer className="bg-gray-800 text-white py-6">
        <div className="section-shell text-center">
          <p>&copy; 2024 DomestyX. All rights reserved.</p>
        </div>
