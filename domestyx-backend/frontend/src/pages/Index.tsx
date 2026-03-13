@@ -99,42 +99,26 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="hidden md:block bg-gradient-to-br from-slate-50 via-white to-slate-50">
-        <div className="section-shell">
-          <div className="rounded-3xl bg-white/70 p-8 shadow-md shadow-slate-200 md:p-10">
-            <div className="grid gap-10 md:grid-cols-[1.1fr,0.9fr] items-center">
-              <div className="space-y-8 text-left">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Premium Domestic Help</p>
-                  <h2 className="text-3xl md:text-5xl font-bold text-app-text mt-3 leading-tight">
-                    Connect with Trusted <span className="text-primary">Domestic Workers</span>
-                  </h2>
-                </div>
-                <p className="text-lg text-slate-600 max-w-3xl">
-                  DomestyX bridges the gap between skilled domestic workers and families who need reliable help.
-                  Find verified professionals or showcase your services with ease.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Link to="/worker/register">
-                    <Button size="lg" className="btn-primary px-6 py-3 text-base tracking-wide">
-                      I'm a Worker
-                    </Button>
-                  </Link>
-                  <Link to="/employer/register">
-                    <Button size="lg" variant="outline" className="px-6 py-3 text-base border-primary text-primary hover:bg-primary hover:text-white">
-                      I'm an Employer
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm rounded-2xl border border-dashed border-slate-200 p-6">
-                  <p className="text-slate-500">Need expert help fast?</p>
-                  <p className="text-xl font-semibold text-primary mt-4">Schedule a call with our matching team</p>
-                  <p className="text-slate-500 mt-2">We respond within 30 minutes on weekdays.</p>
-                </div>
-              </div>
-            </div>
+      <section className="hidden md:block bg-app-bg">
+        <div className="section-shell text-center pb-8">
+          <h2 className="text-4xl md:text-6xl font-bold text-app-text mb-6">
+            Connect with Trusted <span className="text-primary">Domestic Workers</span>
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            DomestyX bridges the gap between skilled domestic workers and families who need reliable help.
+            Find verified professionals or showcase your services with ease.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/worker/register">
+              <Button size="lg" className="btn-primary px-8 py-3 text-lg">
+                I'm a Worker
+              </Button>
+            </Link>
+            <Link to="/employer/register">
+              <Button size="lg" variant="outline" className="px-8 py-3 text-lg border-primary text-primary hover:bg-primary hover:text-white">
+                I'm an Employer
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
