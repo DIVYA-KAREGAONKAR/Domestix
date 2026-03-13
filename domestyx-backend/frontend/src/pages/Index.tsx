@@ -72,24 +72,25 @@ const Index = () => {
     </header>
 
      <main className="space-y-12 py-12">
-      <section className="md:hidden bg-gradient-to-br from-slate-50 via-white to-white">
-        <div className="section-shell">
-          <div className="rounded-3xl bg-white/90 p-6 shadow-md shadow-slate-200 text-center">
+      <section className="md:hidden relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-100 to-white opacity-90"></div>
+        <div className="relative section-shell text-center py-12">
+          <div className="mx-auto max-w-3xl rounded-3xl bg-white/90 px-6 py-10 shadow-xl shadow-slate-300">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Premium Domestic Help</p>
-            <h2 className="text-2xl font-bold text-app-text mt-4">
+            <h2 className="text-3xl font-bold text-app-text mt-4">
               Connect with Trusted <span className="text-primary">Domestic Workers</span>
             </h2>
-            <p className="text-base text-slate-600 mt-3">
+            <p className="text-base text-slate-600 mt-4">
               DomestyX bridges the gap between skilled domestic workers and families who need reliable help.
               Find verified professionals or showcase your services with ease.
             </p>
-            <div className="flex flex-col items-center gap-3 mt-6">
-              <Link to="/worker/register" className="w-full max-w-xs">
+            <div className="flex flex-col items-center gap-3 mt-8">
+              <Link to="/worker/register" className="w-full max-w-sm">
                 <Button size="lg" className="w-full btn-primary px-6 py-3 text-base tracking-wide">
                   I'm a Worker
                 </Button>
               </Link>
-              <Link to="/employer/register" className="w-full max-w-xs">
+              <Link to="/employer/register" className="w-full max-w-sm">
                 <Button size="lg" variant="outline" className="w-full px-6 py-3 text-base border-primary text-primary hover:bg-primary hover:text-white">
                   I'm an Employer
                 </Button>
