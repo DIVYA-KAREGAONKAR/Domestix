@@ -93,17 +93,18 @@
     @apply min-h-screen;
   }
 
-  .supported-by-caption {
-    @apply mt-3 text-xs text-slate-300 flex items-center justify-center gap-2;
-    opacity: 0.92;
-    font-size: 0.75rem;
+  .partner-badge {
+    @apply mt-3 inline-flex items-center gap-2 bg-white text-black;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
   }
 
-  .supported-by-caption img {
-    height: 24px;
+  .partner-badge img {
+    height: 20px;
     width: auto;
-    filter: grayscale(1) brightness(0.8);
-    opacity: 0.95;
   }
 
   .page-wrap {

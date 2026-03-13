@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Briefcase, Shield, Star } from "lucide-react";
-import fasterCapitalLogo from "@/assets/fasterCapitalLogo.svg";
 
 const Index = () => {
  return (
@@ -196,15 +195,15 @@ const Index = () => {
       </section>
      </main>
 
-   <footer className="bg-slate-700 text-white py-6">
-       <div className="section-shell text-center">
-         <p>&copy; 2024 DomestyX. All rights reserved.</p>
-         <p className="supported-by-caption">
-           <img src={fasterCapitalLogo} alt="FasterCapital logo" />
-           Supported by FasterCapital
-         </p>
+   <footer className="bg-gray-800 text-white py-6">
+     <div className="section-shell text-center">
+       <p>&copy; 2024 DomestyX. All rights reserved.</p>
+       <div className="partner-badge">
+         <img src="/images/fastercapital.png" alt="Supported by FasterCapital" />
+         <span>Supported by FasterCapital</span>
        </div>
-    </footer>
+     </div>
+   </footer>
    </div>
 );
 };
