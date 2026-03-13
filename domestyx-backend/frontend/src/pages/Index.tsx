@@ -13,12 +13,6 @@ const Index = () => {
             DomestyX
           </Link>
           <div className="flex flex-wrap gap-2 justify-center md:justify-end w-full">
-            <Link to="/worker/login">
-              <Button className="btn-primary">Worker Login</Button>
-            </Link>
-            <Link to="/employer/login">
-              <Button variant="outline">Employer Login</Button>
-            </Link>
             <Link to="/agency/login">
               <Button variant="outline">Agency</Button>
             </Link>
@@ -34,40 +28,30 @@ const Index = () => {
     </header>
     <header className="md:hidden bg-white shadow-sm border-b">
       <div className="section-shell">
-        <div className="flex flex-col gap-3 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="text-2xl font-bold text-primary">
-              DomestyX
-            </Link>
-            <Link to="/worker/login">
-              <Button size="sm" className="btn-primary px-4 py-1 tracking-wide">
-                Worker Login
-              </Button>
-            </Link>
+          <div className="flex flex-col gap-3 py-4">
+            <div className="flex items-center justify-between">
+              <Link to="/" className="text-2xl font-bold text-primary">
+                DomestyX
+              </Link>
+            </div>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+              <Link to="/agency/login">
+                <Button size="xs" variant="outline" className="px-4 py-1">
+                  Agency
+                </Button>
+              </Link>
+              <Link to="/government/login">
+                <Button size="xs" variant="outline" className="px-4 py-1">
+                  Government
+                </Button>
+              </Link>
+              <Link to="/support-provider/login">
+                <Button size="xs" variant="outline" className="px-4 py-1">
+                  Support
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link to="/employer/login">
-              <Button size="xs" variant="outline" className="px-4 py-1">
-                Employer
-              </Button>
-            </Link>
-            <Link to="/agency/login">
-              <Button size="xs" variant="outline" className="px-4 py-1">
-                Agency
-              </Button>
-            </Link>
-            <Link to="/government/login">
-              <Button size="xs" variant="outline" className="px-4 py-1">
-                Government
-              </Button>
-            </Link>
-            <Link to="/support-provider/login">
-              <Button size="xs" variant="outline" className="px-4 py-1">
-                Support
-              </Button>
-            </Link>
-          </div>
-        </div>
       </div>
     </header>
 
