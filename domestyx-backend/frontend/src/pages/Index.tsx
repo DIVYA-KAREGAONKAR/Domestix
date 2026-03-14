@@ -196,11 +196,11 @@ const Index = () => {
      </main>
 
    <footer className="bg-gray-800 text-white py-6">
-     <div className="section-shell text-center">
-       <p>&copy; 2024 DomestyX. All rights reserved.</p>
-       <div className="partner-badge">
-         <img src="/images/fastercapital.png" alt="Supported by FasterCapital" />
-         <span>Supported by FasterCapital</span>
+     <div className="section-shell text-center space-y-2">
+       <p className="text-sm text-slate-200">&copy; 2024 DomestyX. All rights reserved.</p>
+       <div className="footer-partner">
+         <span className="text-sm text-slate-200">Powered by</span>
+        <img src="/images/FasterCapital.jpeg" alt="FasterCapital logo" className="footer-logo" />
        </div>
      </div>
    </footer>
