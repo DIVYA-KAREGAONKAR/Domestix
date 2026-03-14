@@ -25,13 +25,13 @@ const workPermitStatusOptions = ["not_applied", "applied", "approved"];
 
 const WorkerProfile = () => {
   const { user, isAuthenticated, isWorker, logout, refreshUser } = useAuth();
- const navigate = useNavigate();
- const imageInputRef = useRef<HTMLInputElement>(null);
- const [isLoading, setIsLoading] = useState(false);
- const [isSaving, setIsSaving] = useState(false);
- const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
- const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState({
  firstName: user?.first_name || "",
  lastName: user?.last_name || "",
  email: user?.email || "",
@@ -78,7 +78,56 @@ const WorkerProfile = () => {
  medicalFitnessCertificate: "",
  policeVerificationCertificate: "",
  profileImage: ""
- });
+  });
+
+  const mapProfileResponseToState = (data: any) => ({
+    firstName: user?.first_name || "",
+    lastName: user?.last_name || "",
+    email: user?.email || "",
+    gender: data.gender || "",
+    maritalStatus: data.marital_status || "",
+    nationality: data.nationality || "",
+    dateOfBirth: data.date_of_birth || "",
+    phone: data.phone || "",
+    alternatePhone: data.alternate_phone || "",
+    address: data.address || "",
+    city: data.city || "",
+    state: data.state || "",
+    zipCode: data.zip_code || "",
+    country: data.country || "",
+    bio: data.bio || "",
+    hourlyRate: data.hourly_rate || "",
+    experience: data.experience || "",
+    availability: Array.isArray(data.availability) ? data.availability : [],
+    services: Array.isArray(data.services) ? data.services : [],
+    languages: Array.isArray(data.languages) ? data.languages : [],
+    workPreference: data.work_preference || "",
+    preferredWorkLocations: Array.isArray(data.preferred_work_locations) ? data.preferred_work_locations : [],
+    willingToRelocate: data.willing_to_relocate || false,
+    expectedSalaryFullTime: data.expected_salary_full_time || "",
+    expectedSalaryPartTime: data.expected_salary_part_time || "",
+    hasTransportation: data.has_transportation || false,
+    hasReferences: data.has_references || false,
+    isBackgroundChecked: data.is_background_checked || false,
+    passportNumber: data.passport_number || "",
+    passportExpiryDate: data.passport_expiry_date || "",
+    visaType: data.visa_type || "",
+    domesticWorkerVisaIssuedBy: data.domestic_worker_visa_issued_by || "",
+    workPermitStatus: data.work_permit_status || "",
+    hasCriminalRecord: data.has_criminal_record || false,
+    criminalRecordDetails: data.criminal_record_details || "",
+    policeClearanceAvailable: data.police_clearance_available || false,
+    educationalQualification: data.educational_qualification || "",
+    healthConditions: data.health_conditions || "",
+    emergencyContact: data.emergency_contact || "",
+    availableFrom: data.available_from || "",
+    expectedBenefits: Array.isArray(data.expected_benefits) ? data.expected_benefits.join(", ") : "",
+    emiratesIdDocument: data.emirates_id_document || "",
+    residencyVisaDocument: data.residency_visa_document || "",
+    medicalFitnessCertificate: data.medical_fitness_certificate || "",
+    policeVerificationCertificate: data.police_verification_certificate || "",
+    profileImage: data.profile_image || ""
+  });
 
  // 1. Fetch Profile on Load
  useEffect(() => {
@@ -89,57 +138,11 @@ const WorkerProfile = () => {
 
  const fetchProfile = async () => {
  try {
- const response = await api.get("/worker/profile/");
- const data = response.data;
- setProfileData(prev => ({
- ...prev,
- firstName: user?.first_name || "",
- lastName: user?.last_name || "",
- email: user?.email || "",
- gender: data.gender || "",
- maritalStatus: data.marital_status || "",
- nationality: data.nationality || "",
- dateOfBirth: data.date_of_birth || "",
- phone: data.phone || "",
- alternatePhone: data.alternate_phone || "",
- address: data.address || "",
- city: data.city || "",
- state: data.state || "",
- zipCode: data.zip_code || "", // ✅ Mapped correctly from snake_case
- country: data.country || "",
- bio: data.bio || "",
- hourlyRate: data.hourly_rate || "", // ✅ Mapped correctly from snake_case
- experience: data.experience || "", // ✅ Matches models.py 'experience'
- availability: Array.isArray(data.availability) ? data.availability : [],
- services: Array.isArray(data.services) ? data.services : [],
- languages: Array.isArray(data.languages) ? data.languages : [],
- workPreference: data.work_preference || "",
- preferredWorkLocations: Array.isArray(data.preferred_work_locations) ? data.preferred_work_locations : [],
- willingToRelocate: data.willing_to_relocate || false,
- expectedSalaryFullTime: data.expected_salary_full_time || "",
- expectedSalaryPartTime: data.expected_salary_part_time || "",
- hasTransportation: data.has_transportation || false,
- hasReferences: data.has_references || false,
- isBackgroundChecked: data.is_background_checked || false,
- passportNumber: data.passport_number || "",
- passportExpiryDate: data.passport_expiry_date || "",
- visaType: data.visa_type || "",
- domesticWorkerVisaIssuedBy: data.domestic_worker_visa_issued_by || "",
- workPermitStatus: data.work_permit_status || "",
- hasCriminalRecord: data.has_criminal_record || false,
- criminalRecordDetails: data.criminal_record_details || "",
- policeClearanceAvailable: data.police_clearance_available || false,
- educationalQualification: data.educational_qualification || "",
- healthConditions: data.health_conditions || "",
- emergencyContact: data.emergency_contact || "",
- availableFrom: data.available_from || "",
- expectedBenefits: Array.isArray(data.expected_benefits) ? data.expected_benefits.join(", ") : "",
- emiratesIdDocument: data.emirates_id_document || "",
- residencyVisaDocument: data.residency_visa_document || "",
- medicalFitnessCertificate: data.medical_fitness_certificate || "",
- policeVerificationCertificate: data.police_verification_certificate || "",
- profileImage: data.profile_image || ""
- }));
+        const response = await api.get("/worker/profile/");
+        setProfileData(prev => ({
+          ...prev,
+          ...mapProfileResponseToState(response.data),
+        }));
  } catch (err) {
  console.error("Fetch error:", err);
  }
@@ -191,7 +194,11 @@ const WorkerProfile = () => {
  available_from: updatedData.availableFrom || null,
  expected_benefits: updatedData.expectedBenefits.split(",").map((i) => i.trim()).filter(Boolean),
  };
- await api.put("/worker/profile/", payload);
+    const response = await api.put("/worker/profile/", payload);
+    setProfileData(prev => ({
+      ...prev,
+      ...mapProfileResponseToState(response.data),
+    }));
  } catch (error) {
  console.error("Auto-save failed:", error);
  } finally {
