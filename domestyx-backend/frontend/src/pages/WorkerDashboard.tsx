@@ -153,35 +153,33 @@ const WorkerDashboard = () => {
  return () => clearInterval(interval);
  }, [activeThreadId, activeTab]);
 
- const handleApply = async (jobId: number) => {
- if (isApplying !== null) return; // ✅ Prevent double-clicks immediately
+const handleApply = async (jobId: number) => {
+  if (isApplying !== null) return; // ✅ Prevent double-clicks immediately
 
- setIsApplying(jobId);
- try {
- const file = applicationFiles[jobId];
- const note = applicationNotes[jobId] || "";
- if (file) {
- const formData = new FormData();
- formData.append("cover_note", note);
- formData.append("supporting_document", file);
- await api.post(`/jobs/${jobId}/apply/`, formData, {
- headers: { "Content-Type": "multipart/form-data" },
- });
- } else {
- await api.post(`/jobs/${jobId}/apply/`, { cover_note: note });
- }
- toast({ title: "Success", description: "Application sent successfully!" });
- // Refresh jobs to update the "Applied" status locally
- await fetchJobs(); 
- setApplicationNotes((prev) => ({ ...prev, [jobId]: "" }));
- setApplicationFiles((prev) => ({ ...prev, [jobId]: null }));
- } catch (err: any) {
- const message = err.response?.data?.message || "Application failed.";
- toast({ title: "Error", description: message, variant: "destructive" });
- } finally {
- setIsApplying(null); // ✅ Release the lock
- }
- };
+  setIsApplying(jobId);
+  try {
+    const file = applicationFiles[jobId];
+    const note = applicationNotes[jobId] || "";
+    if (file) {
+      const formData = new FormData();
+      formData.append("cover_note", note);
+      formData.append("supporting_document", file);
+      await api.post(`/jobs/${jobId}/apply/`, formData);
+    } else {
+      await api.post(`/jobs/${jobId}/apply/`, { cover_note: note });
+    }
+    toast({ title: "Success", description: "Application sent successfully!" });
+    // Refresh jobs to update the "Applied" status locally
+    await fetchJobs(); 
+    setApplicationNotes((prev) => ({ ...prev, [jobId]: "" }));
+    setApplicationFiles((prev) => ({ ...prev, [jobId]: null }));
+  } catch (err: any) {
+    const message = err.response?.data?.message || "Application failed.";
+    toast({ title: "Error", description: message, variant: "destructive" });
+  } finally {
+    setIsApplying(null); // ✅ Release the lock
+  }
+};
 
  const handleSaveJob = async (jobId: number) => {
  try {

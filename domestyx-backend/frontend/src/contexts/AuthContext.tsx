@@ -20,6 +20,7 @@ interface AuthContextType {
   getAccessToken: () => string | null;
   login: (accessToken: string, userObject: User) => void;
   logout: () => void;
+  refreshUser: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,6 +76,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false); 
   };
 
+  const refreshUser = (updates: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updatedRole = updates.role ? normalizeRole(updates.role) : prev.role;
+      const updatedUser = {
+        ...prev,
+        ...updates,
+        role: updatedRole,
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return updatedUser;
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
@@ -98,7 +113,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isEmployer, 
         login, 
         logout, 
-        getAccessToken 
+        getAccessToken,
+        refreshUser,
       }}
     >
       {children}

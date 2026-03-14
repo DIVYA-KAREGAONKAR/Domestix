@@ -24,7 +24,7 @@ const visaTypeOptions = ["employment", "visit", "none"];
 const workPermitStatusOptions = ["not_applied", "applied", "approved"];
 
 const WorkerProfile = () => {
- const { user, isAuthenticated, isWorker, logout } = useAuth();
+  const { user, isAuthenticated, isWorker, logout, refreshUser } = useAuth();
  const navigate = useNavigate();
  const imageInputRef = useRef<HTMLInputElement>(null);
  const [isLoading, setIsLoading] = useState(false);
@@ -217,48 +217,47 @@ const WorkerProfile = () => {
  }));
  };
 
- const handleSelectChange = (
- field: "experience" | "state" | "country" | "gender" | "maritalStatus" | "workPreference" | "visaType" | "workPermitStatus",
- value: string
- ) => {
- setProfileData(prev => ({ ...prev, [field]: value }));
- };
+const handleSelectChange = (
+  field: "experience" | "state" | "country" | "gender" | "maritalStatus" | "workPreference" | "visaType" | "workPermitStatus",
+  value: string
+) => {
+  setProfileData(prev => ({ ...prev, [field]: value }));
+};
 
- const handleImageUpload = async (file: File) => {
- const formData = new FormData();
- formData.append("profile_image", file);
- try {
- const response = await api.put("/worker/profile/", formData, {
- headers: { "Content-Type": "multipart/form-data" }
- });
- setProfileData(prev => ({ ...prev, profileImage: response.data.profile_image }));
- toast({ title: "Success", description: "Photo updated!" });
- } catch {
- toast({ title: "Error", description: "Upload failed", variant: "destructive" });
- }
- };
+const handleImageUpload = async (file: File) => {
+  const formData = new FormData();
+  formData.append("profile_image", file);
+  try {
+    const response = await api.put("/worker/profile/", formData);
+    const imageUrl = response.data.profile_image || profileData.profileImage;
+    setProfileData(prev => ({ ...prev, profileImage: imageUrl }));
+    refreshUser({ profile_image: imageUrl });
+    toast({ title: "Success", description: "Photo updated!" });
+  } catch {
+    toast({ title: "Error", description: "Upload failed", variant: "destructive" });
+  }
+};
 
- const handleDocumentUpload = async (fieldName: string, file: File) => {
- const formData = new FormData();
- formData.append(fieldName, file);
- try {
- const response = await api.put("/worker/profile/", formData, {
- headers: { "Content-Type": "multipart/form-data" }
- });
- setProfileData(prev => ({
- ...prev,
- emiratesIdDocument: response.data.emirates_id_document || prev.emiratesIdDocument,
- residencyVisaDocument: response.data.residency_visa_document || prev.residencyVisaDocument,
- medicalFitnessCertificate: response.data.medical_fitness_certificate || prev.medicalFitnessCertificate,
- policeVerificationCertificate: response.data.police_verification_certificate || prev.policeVerificationCertificate,
- }));
- toast({ title: "Success", description: "Document uploaded." });
- } catch {
- toast({ title: "Error", description: "Document upload failed", variant: "destructive" });
- }
- };
+const handleDocumentUpload = async (fieldName: string, file: File) => {
+  const formData = new FormData();
+  formData.append(fieldName, file);
+  try {
+    const response = await api.put("/worker/profile/", formData);
+    setProfileData(prev => ({
+      ...prev,
+      emiratesIdDocument: response.data.emirates_id_document || prev.emiratesIdDocument,
+      residencyVisaDocument: response.data.residency_visa_document || prev.residencyVisaDocument,
+      medicalFitnessCertificate: response.data.medical_fitness_certificate || prev.medicalFitnessCertificate,
+      policeVerificationCertificate: response.data.police_verification_certificate || prev.policeVerificationCertificate,
+    }));
+    toast({ title: "Success", description: "Document uploaded." });
+  } catch {
+    toast({ title: "Error", description: "Document upload failed", variant: "destructive" });
+  }
+};
 
- const handleDeactivateAccount = async () => {
+
+const handleDeactivateAccount = async () => {
  if (!window.confirm("Deactivate your account? You will be logged out immediately.")) return;
  try {
  await api.patch("/profile/deactivate/");

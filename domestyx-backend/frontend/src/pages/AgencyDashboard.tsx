@@ -70,48 +70,44 @@ const AgencyDashboard = () => {
  }
  };
 
- const uploadAgencyDocument = async (file: File) => {
- const formData = new FormData();
- formData.append("verification_document", file);
- try {
- const response = await api.put("/agency/profile/", formData, {
- headers: { "Content-Type": "multipart/form-data" },
- });
- setProfile((prev: any) => ({ ...prev, verification_document: response.data?.verification_document || prev.verification_document }));
- toast({ title: "Uploaded", description: "Verification document uploaded." });
- } catch {
- toast({ title: "Error", description: "Document upload failed.", variant: "destructive" });
- }
- };
+const uploadAgencyDocument = async (file: File) => {
+  const formData = new FormData();
+  formData.append("verification_document", file);
+  try {
+    const response = await api.put("/agency/profile/", formData);
+    setProfile((prev: any) => ({ ...prev, verification_document: response.data?.verification_document || prev.verification_document }));
+    toast({ title: "Uploaded", description: "Verification document uploaded." });
+  } catch {
+    toast({ title: "Error", description: "Document upload failed.", variant: "destructive" });
+  }
+};
 
- const submitWorker = async () => {
- try {
- if (submissionDoc) {
- const data = new FormData();
- data.append("worker", String(Number(form.worker_id)));
- data.append("job_role", form.job_role);
- data.append("experience_summary", form.experience_summary);
- data.append("notes", form.notes);
- data.append("verification_document", submissionDoc);
- await api.post("/agency/worker-submissions/", data, {
- headers: { "Content-Type": "multipart/form-data" },
- });
- } else {
- await api.post("/agency/worker-submissions/", {
- worker: Number(form.worker_id),
- job_role: form.job_role,
- experience_summary: form.experience_summary,
- notes: form.notes,
- });
- }
- setForm({ worker_id: "", job_role: "", experience_summary: "", notes: "" });
- setSubmissionDoc(null);
- toast({ title: "Submitted", description: "Worker submitted successfully." });
- await load();
- } catch (err: any) {
- toast({ title: "Error", description: err?.response?.data?.error || "Submission failed.", variant: "destructive" });
- }
- };
+const submitWorker = async () => {
+  try {
+    if (submissionDoc) {
+      const data = new FormData();
+      data.append("worker", String(Number(form.worker_id)));
+      data.append("job_role", form.job_role);
+      data.append("experience_summary", form.experience_summary);
+      data.append("notes", form.notes);
+      data.append("verification_document", submissionDoc);
+      await api.post("/agency/worker-submissions/", data);
+    } else {
+      await api.post("/agency/worker-submissions/", {
+        worker: Number(form.worker_id),
+        job_role: form.job_role,
+        experience_summary: form.experience_summary,
+        notes: form.notes,
+      });
+    }
+    setForm({ worker_id: "", job_role: "", experience_summary: "", notes: "" });
+    setSubmissionDoc(null);
+    toast({ title: "Submitted", description: "Worker submitted successfully." });
+    await load();
+  } catch (err: any) {
+    toast({ title: "Error", description: err?.response?.data?.error || "Submission failed.", variant: "destructive" });
+  }
+};
 
  const createJobForEmployer = async () => {
  try {

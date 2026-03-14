@@ -67,23 +67,21 @@ const GovernmentDashboard = () => {
  }
  };
 
- const saveGovernmentProfile = async () => {
- try {
- const form = new FormData();
- form.append("authority_name", profile.authority_name || "");
- form.append("credential_reference", profile.credential_reference || "");
- if (profile.verification_document instanceof File) {
- form.append("verification_document", profile.verification_document);
- }
- await api.put("/government/profile/", form, {
- headers: { "Content-Type": "multipart/form-data" },
- });
- toast({ title: "Saved", description: "Government profile updated." });
- await load();
- } catch {
- toast({ title: "Error", description: "Unable to save government profile.", variant: "destructive" });
- }
- };
+const saveGovernmentProfile = async () => {
+  try {
+    const form = new FormData();
+    form.append("authority_name", profile.authority_name || "");
+    form.append("credential_reference", profile.credential_reference || "");
+    if (profile.verification_document instanceof File) {
+      form.append("verification_document", profile.verification_document);
+    }
+    await api.put("/government/profile/", form);
+    toast({ title: "Saved", description: "Government profile updated." });
+    await load();
+  } catch {
+    toast({ title: "Error", description: "Unable to save government profile.", variant: "destructive" });
+  }
+};
 
  return (
  <div className="min-h-screen bg-slate-50">
