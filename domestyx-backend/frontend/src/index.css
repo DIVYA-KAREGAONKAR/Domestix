@@ -152,3 +152,74 @@
     padding: 0 1rem;
   }
 }
+
+:root {
+  background-color: #f9fafb;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  color: #0f172a;
+  background-color: #f9fafb;
+}
+
+a,
+a:visited {
+  color: #1d4ed8 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .app-shell,
+  .page-wrap,
+  .glass-card,
+  .responsive-grid,
+  .footer-partner,
+  .stacked-header,
+  .section-shell {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 10px;
+    margin: 0 auto 15px;
+    flex-wrap: wrap;
+  }
+
+  .glass-card {
+    padding: 1rem;
+  }
+
+  .footer-partner,
+  .stacked-header {
+    display: block;
+  }
+
+  .stacked-header > * {
+    width: 100%;
+  }
+
+  .responsive-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-primary,
+  .btn-accent,
+  .btn-success {
+    width: 100%;
+    text-align: center;
+  }
+}
