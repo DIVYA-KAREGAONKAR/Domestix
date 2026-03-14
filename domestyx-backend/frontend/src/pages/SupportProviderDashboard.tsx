@@ -16,6 +16,7 @@ const SupportProviderDashboard = () => {
  service_categories: [] as string[],
  contact_information: "",
  });
+ const [isEditingProfile, setIsEditingProfile] = useState(false);
  const [categoryText, setCategoryText] = useState("");
  const [requests, setRequests] = useState<any[]>([]);
  const [activeRequestId, setActiveRequestId] = useState<number | null>(null);
@@ -52,6 +53,7 @@ const SupportProviderDashboard = () => {
  });
  toast({ title: "Saved", description: "Support provider profile updated." });
  await load();
+ setIsEditingProfile(false);
  } catch {
  toast({ title: "Error", description: "Profile update failed.", variant: "destructive" });
  }
@@ -103,11 +105,36 @@ const SupportProviderDashboard = () => {
  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 py-6">
  <Card>
  <CardHeader><CardTitle>Support Provider Profile</CardTitle></CardHeader>
- <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
+ <CardContent>
+ {!isEditingProfile ? (
+ <div className="space-y-4">
+ <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Company Name</p>
+ <p className="text-sm font-semibold text-app-text">{profile.company_name || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Service Categories</p>
+ <p className="text-sm font-semibold text-app-text">{categoryText || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Contact</p>
+ <p className="text-sm font-semibold text-app-text">{profile.contact_information || "Not set"}</p>
+ </div>
+ </div>
+ <Button className="btn-primary w-full" onClick={() => setIsEditingProfile(true)}>Update Profile</Button>
+ </div>
+ ) : (
+ <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
  <div className="space-y-1"><Label>Company Name</Label><Input value={profile.company_name} onChange={(e) => setProfile((p) => ({ ...p, company_name: e.target.value }))} /></div>
  <div className="space-y-1"><Label>Service Categories</Label><Input value={categoryText} onChange={(e) => setCategoryText(e.target.value)} placeholder="visa processing, legal consultancy" /></div>
  <div className="space-y-1"><Label>Contact</Label><Input value={profile.contact_information} onChange={(e) => setProfile((p) => ({ ...p, contact_information: e.target.value }))} /></div>
- <div className="md:col-span-3"><Button className="btn-primary" onClick={() => void saveProfile()}>Save Profile</Button></div>
+ <div className="md:col-span-3 flex gap-2">
+ <Button className="btn-primary" onClick={() => void saveProfile()}>Save Profile</Button>
+ <Button variant="outline" onClick={() => setIsEditingProfile(false)}>Cancel</Button>
+ </div>
+ </div>
+ )}
  </CardContent>
  </Card>
 

@@ -16,6 +16,7 @@ const GovernmentDashboard = () => {
  const [analytics, setAnalytics] = useState<any>(null);
  const [governmentUsers, setGovernmentUsers] = useState<{ workers: any[]; employers: any[] }>({ workers: [], employers: [] });
  const [profile, setProfile] = useState<any>({ authority_name: "", credential_reference: "", verification_document: "" });
+ const [isEditingProfile, setIsEditingProfile] = useState(false);
  const [resolutionNotes, setResolutionNotes] = useState<Record<number, string>>({});
  const [jobReviewNotes, setJobReviewNotes] = useState<Record<number, string>>({});
 
@@ -78,6 +79,7 @@ const saveGovernmentProfile = async () => {
     await api.put("/government/profile/", form);
     toast({ title: "Saved", description: "Government profile updated." });
     await load();
+    setIsEditingProfile(false);
   } catch {
     toast({ title: "Error", description: "Unable to save government profile.", variant: "destructive" });
   }
@@ -98,7 +100,31 @@ const saveGovernmentProfile = async () => {
 <main className="max-w-7xl mx-auto px-4 space-y-6 py-6">
 <Card className="shadow-lg border-0 bg-white">
 <CardHeader><CardTitle>Government Verification Profile</CardTitle></CardHeader>
- <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
+ <CardContent>
+ {!isEditingProfile ? (
+ <div className="space-y-4">
+ <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Authority Name</p>
+ <p className="text-sm font-semibold text-app-text">{profile.authority_name || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Credential Reference</p>
+ <p className="text-sm font-semibold text-app-text">{profile.credential_reference || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Verification Document</p>
+ {typeof profile.verification_document === "string" && profile.verification_document ? (
+ <a className="text-sm text-primary underline" href={profile.verification_document} target="_blank" rel="noreferrer">View uploaded document</a>
+ ) : (
+ <p className="text-sm text-gray-600">Not uploaded</p>
+ )}
+ </div>
+ </div>
+ <Button className="btn-primary w-full" onClick={() => setIsEditingProfile(true)}>Update Profile</Button>
+ </div>
+ ) : (
+ <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
  <div className="space-y-1">
  <Label>Authority Name</Label>
  <Input value={profile.authority_name || ""} onChange={(e) => setProfile((p: any) => ({ ...p, authority_name: e.target.value }))} />
@@ -121,9 +147,12 @@ const saveGovernmentProfile = async () => {
  <a className="text-xs text-primary underline" href={profile.verification_document} target="_blank" rel="noreferrer">View uploaded document</a>
  ) : null}
  </div>
- <div className="md:col-span-3">
+ <div className="md:col-span-3 flex gap-2">
  <Button onClick={() => void saveGovernmentProfile()}>Save Profile</Button>
+ <Button variant="outline" onClick={() => setIsEditingProfile(false)}>Cancel</Button>
  </div>
+ </div>
+ )}
 </CardContent>
 </Card>
 

@@ -25,6 +25,7 @@ const AgencyDashboard = () => {
  contact_information: "",
  verification_document: "",
  });
+ const [isEditingProfile, setIsEditingProfile] = useState(false);
  const [submissions, setSubmissions] = useState<any[]>([]);
  const [employers, setEmployers] = useState<EmployerOption[]>([]);
  const [form, setForm] = useState({ worker_id: "", job_role: "", experience_summary: "", notes: "" });
@@ -65,6 +66,7 @@ const AgencyDashboard = () => {
  try {
  await api.put("/agency/profile/", profile);
  toast({ title: "Saved", description: "Agency profile updated." });
+ setIsEditingProfile(false);
  } catch {
  toast({ title: "Error", description: "Profile update failed.", variant: "destructive" });
  }
@@ -160,7 +162,37 @@ const submitWorker = async () => {
  <main className="max-w-7xl mx-auto px-4 space-y-6 py-6">
  <Card className="shadow-lg border-0 bg-white">
  <CardHeader><CardTitle>Agency Profile</CardTitle></CardHeader>
- <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
+ <CardContent>
+ {!isEditingProfile ? (
+ <div className="space-y-4">
+ <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Agency Name</p>
+ <p className="text-sm font-semibold text-app-text">{profile.agency_name || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Approval Number</p>
+ <p className="text-sm font-semibold text-app-text">{profile.mohre_approval_number || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Contact</p>
+ <p className="text-sm font-semibold text-app-text">{profile.contact_information || "Not set"}</p>
+ </div>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Verification Document</p>
+ {profile.verification_document ? (
+ <a className="text-sm text-primary underline" href={profile.verification_document} target="_blank" rel="noreferrer">
+ View uploaded document
+ </a>
+ ) : (
+ <p className="text-sm text-gray-600">Not uploaded</p>
+ )}
+ </div>
+ <Button className="btn-primary w-full" onClick={() => setIsEditingProfile(true)}>Update Profile</Button>
+ </div>
+ ) : (
+ <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
  <div className="space-y-1"><Label>Agency Name</Label><Input value={profile.agency_name} onChange={(e) => setProfile((p) => ({ ...p, agency_name: e.target.value }))} /></div>
  <div className="space-y-1"><Label>Approval Number</Label><Input value={profile.mohre_approval_number} onChange={(e) => setProfile((p) => ({ ...p, mohre_approval_number: e.target.value }))} /></div>
  <div className="space-y-1"><Label>Contact</Label><Input value={profile.contact_information} onChange={(e) => setProfile((p) => ({ ...p, contact_information: e.target.value }))} /></div>
@@ -173,7 +205,12 @@ const submitWorker = async () => {
  </a>
  )}
  </div>
- <div className="md:col-span-3"><Button className="btn-primary" onClick={() => void saveProfile()}>Save Profile</Button></div>
+ <div className="md:col-span-3 flex gap-2">
+ <Button className="btn-primary" onClick={() => void saveProfile()}>Save Profile</Button>
+ <Button variant="outline" onClick={() => setIsEditingProfile(false)}>Cancel</Button>
+ </div>
+ </div>
+ )}
  </CardContent>
  </Card>
 

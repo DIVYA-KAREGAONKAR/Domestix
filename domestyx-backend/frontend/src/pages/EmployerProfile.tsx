@@ -13,6 +13,7 @@ const EmployerProfile = () => {
  const { user, logout } = useAuth();
  const navigate = useNavigate();
  const [isSaving, setIsSaving] = useState(false);
+ const [isEditing, setIsEditing] = useState(false);
  const [profile, setProfile] = useState({
  company_name: "",
  phone: "",
@@ -40,6 +41,7 @@ const EmployerProfile = () => {
  // ✅ Matches EmployerProfile model fields exactly
  await api.put("/employer/profile/", profile); 
  toast({ title: "Profile Updated", description: "Company details saved." });
+ setIsEditing(false);
  } catch (err) {
  toast({ title: "Error", description: "Save failed", variant: "destructive" });
  } finally {
@@ -66,6 +68,27 @@ const EmployerProfile = () => {
  <Card>
  <CardHeader><CardTitle>Company Profile</CardTitle></CardHeader>
  <CardContent>
+ {!isEditing ? (
+ <div className="space-y-4">
+ <div className="grid gap-3 sm:grid-cols-2">
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Company Name</p>
+ <p className="text-sm font-semibold text-app-text">{profile.company_name || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Phone</p>
+ <p className="text-sm font-semibold text-app-text">{profile.phone || "Not set"}</p>
+ </div>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Address</p>
+ <p className="text-sm font-semibold text-app-text">{profile.address || "Not set"}</p>
+ </div>
+ <Button type="button" className="w-full btn-primary" onClick={() => setIsEditing(true)}>
+ Update Profile
+ </Button>
+ </div>
+ ) : (
  <form onSubmit={handleSave} className="space-y-4">
  <div>
  <Label><Building2 className="inline h-4 w-4 mr-1"/> Company Name</Label>
@@ -82,10 +105,14 @@ const EmployerProfile = () => {
  <Button type="submit" className="w-full btn-primary" disabled={isSaving}>
  {isSaving ? "Saving..." : "Save Profile"}
  </Button>
+ <Button type="button" variant="outline" className="w-full" onClick={() => setIsEditing(false)}>
+ Cancel
+ </Button>
  <Button type="button" variant="destructive" className="w-full" onClick={() => void handleDeactivateAccount()}>
  Deactivate Account
  </Button>
  </form>
+ )}
  </CardContent>
  </Card>
  </div>

@@ -30,6 +30,7 @@ const WorkerProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [profileData, setProfileData] = useState({
  firstName: user?.first_name || "",
@@ -281,6 +282,7 @@ const handleDeactivateAccount = async () => {
  setIsLoading(true);
  await autoSave(profileData);
  toast({ title: "Saved", description: "Profile updated successfully!" });
+ setIsEditing(false);
  setIsLoading(false);
  };
 
@@ -296,11 +298,139 @@ const handleDeactivateAccount = async () => {
  </Link>
  <span className="font-semibold text-gray-700">Worker Profile</span>
  </div>
+ <div className="flex items-center gap-3">
  {isSaving && <span className="text-xs text-gray-500 animate-pulse">Saving changes...</span>}
+ {!isEditing ? (
+ <Button size="sm" onClick={() => setIsEditing(true)}>Update Profile</Button>
+ ) : (
+ <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+ )}
+ </div>
  </div>
  </header>
 
  <div className="mx-auto w-full max-w-5xl px-4 py-6 md:py-8">
+ {!isEditing ? (
+ <div className="space-y-6">
+ <Card>
+ <CardHeader><CardTitle className="flex items-center"><User className="h-5 w-5 mr-2"/> Profile Overview</CardTitle></CardHeader>
+ <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
+ <div className="flex items-center gap-4">
+ <Avatar className="h-20 w-20 border">
+ <AvatarImage src={profileData.profileImage} className="object-cover"/>
+ <AvatarFallback className="bg-primary text-white">{user.first_name[0]}</AvatarFallback>
+ </Avatar>
+ <div>
+ <p className="text-lg font-semibold text-app-text">{profileData.firstName} {profileData.lastName}</p>
+ <p className="text-sm text-gray-500">{profileData.email}</p>
+ </div>
+ </div>
+ <div className="grid w-full gap-3 sm:grid-cols-2">
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Phone</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.phone || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Location</p>
+ <p className="text-sm font-semibold text-app-text">
+ {[profileData.city, profileData.state, profileData.country].filter(Boolean).join(", ") || "Not set"}
+ </p>
+ </div>
+ </div>
+ </CardContent>
+ </Card>
+
+ <Card>
+ <CardHeader><CardTitle className="flex items-center"><Star className="h-5 w-5 mr-2"/> Work Snapshot</CardTitle></CardHeader>
+ <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Experience</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.experience || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Work Preference</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.workPreference || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Availability</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.availability.length ? profileData.availability.join(", ") : "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Expected Salary Full-time</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.expectedSalaryFullTime || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Expected Salary Part-time</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.expectedSalaryPartTime || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Hourly Rate</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.hourlyRate || "Not set"}</p>
+ </div>
+ </CardContent>
+ </Card>
+
+ <Card>
+ <CardHeader><CardTitle className="flex items-center"><DollarSign className="h-5 w-5 mr-2"/> Skills & Languages</CardTitle></CardHeader>
+ <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2">
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Services</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.services.length ? profileData.services.join(", ") : "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Languages</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.languages.length ? profileData.languages.join(", ") : "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Bio</p>
+ <p className="text-sm text-gray-700">{profileData.bio || "Not set"}</p>
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Emergency Contact</p>
+ <p className="text-sm font-semibold text-app-text">{profileData.emergencyContact || "Not set"}</p>
+ </div>
+ </CardContent>
+ </Card>
+
+ <Card>
+ <CardHeader><CardTitle className="flex items-center"><MapPin className="h-5 w-5 mr-2"/> Documents</CardTitle></CardHeader>
+ <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2">
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Emirates ID / Residency Visa</p>
+ {profileData.emiratesIdDocument ? (
+ <a className="text-sm text-primary underline" href={profileData.emiratesIdDocument} target="_blank" rel="noreferrer">View document</a>
+ ) : (
+ <p className="text-sm text-gray-600">Not uploaded</p>
+ )}
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Residency Visa Document</p>
+ {profileData.residencyVisaDocument ? (
+ <a className="text-sm text-primary underline" href={profileData.residencyVisaDocument} target="_blank" rel="noreferrer">View document</a>
+ ) : (
+ <p className="text-sm text-gray-600">Not uploaded</p>
+ )}
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Medical Fitness Certificate</p>
+ {profileData.medicalFitnessCertificate ? (
+ <a className="text-sm text-primary underline" href={profileData.medicalFitnessCertificate} target="_blank" rel="noreferrer">View document</a>
+ ) : (
+ <p className="text-sm text-gray-600">Not uploaded</p>
+ )}
+ </div>
+ <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+ <p className="text-xs text-gray-500">Police Verification Certificate</p>
+ {profileData.policeVerificationCertificate ? (
+ <a className="text-sm text-primary underline" href={profileData.policeVerificationCertificate} target="_blank" rel="noreferrer">View document</a>
+ ) : (
+ <p className="text-sm text-gray-600">Not uploaded</p>
+ )}
+ </div>
+ </CardContent>
+ </Card>
+ </div>
+ ) : (
  <form onSubmit={handleSubmit} className="space-y-6">
  <Card>
  <CardHeader><CardTitle className="flex items-center"><User className="h-5 w-5 mr-2"/> Profile Photo</CardTitle></CardHeader>
@@ -496,6 +626,7 @@ const handleDeactivateAccount = async () => {
  Deactivate Account
  </Button>
  </form>
+ )}
  </div>
  </div>
  );
