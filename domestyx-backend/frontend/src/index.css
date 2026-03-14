@@ -93,12 +93,18 @@
     @apply min-h-screen;
   }
 
-  .footer-partner {
+.footer-partner {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     flex-wrap: wrap;
+  }
+
+  .footer-partner img {
+    display: block;
+    margin: 0 auto;
+    max-width: 160px;
   }
 
   .footer-logo {

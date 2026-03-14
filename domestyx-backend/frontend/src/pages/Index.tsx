@@ -32,7 +32,7 @@ const Index = () => {
         <Link to="/" className="text-2xl font-bold text-primary">
           DomestyX
         </Link>
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex flex-wrap items-center gap-2 justify-center">
           <Link to="/agency/login">
             <Button size="xs" variant="outline" className="px-4 py-1 whitespace-nowrap">
               Agency

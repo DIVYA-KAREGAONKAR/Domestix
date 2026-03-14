@@ -306,7 +306,7 @@ const handleApply = async (jobId: number) => {
  case 'hired': return 'bg-green-100 text-green-700 border-green-200';
  case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
  case 'applied': return 'bg-blue-100 text-blue-700 border-blue-200';
- default: return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  default: return 'bg-primary/10 text-primary border-primary/50';
  }
  };
 
